@@ -5,123 +5,201 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WebLinux</title>
 <style>
-:root{--ac:#e95420;--bg1:#2c001e;--panel:rgba(20,20,20,.88);--win:#2b2b2b;--tb:#3a3a3a;--tx:#eee;--mut:#9a9a9a;--mono:ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace}
+:root{--ac:#e95420;--panel:rgba(20,20,24,.8);--win:#2a2a2e;--tb:#3a3a40;--tbi:#2e2e33;--tx:#f2f2f4;--mut:#a3a3ad;--in:#1c1c20;--bd:#ffffff1f;--hov:#ffffff20;--btn:#47474e;--btnh:#58585f;--mono:ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace}
+:root[data-theme=light]{--panel:rgba(246,246,248,.84);--win:#fbfbfc;--tb:#e9e9ed;--tbi:#f2f2f4;--tx:#1d1d1f;--mut:#66666e;--in:#fff;--bd:#0000001f;--hov:#00000014;--btn:#e1e1e6;--btnh:#d2d2d8}
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;overflow:hidden;background:#000;color:var(--tx);font:14px system-ui,"Ubuntu","Segoe UI",sans-serif;user-select:none}
-button{font:inherit;color:inherit;background:#444;border:0;border-radius:6px;padding:5px 10px;cursor:pointer}
-button:hover{background:#555}
+button{font:inherit;color:inherit;background:var(--btn);border:0;border-radius:8px;padding:6px 12px;cursor:pointer;transition:background .15s,filter .15s}
+button:hover{background:var(--btnh)}button.pri{background:var(--ac);color:#fff}button.pri:hover{filter:brightness(1.1)}button.dan{background:#c01c28;color:#fff}
 input,textarea{font:inherit;color:inherit}
-#desktop{position:fixed;inset:0;background:linear-gradient(135deg,#77216f,#2c001e 55%,#e95420 140%);background-size:cover}
-#top{position:fixed;top:0;left:0;right:0;height:32px;background:var(--panel);display:flex;align-items:center;justify-content:space-between;padding:0 10px;z-index:9000;backdrop-filter:blur(8px)}
+input[type=text],input[type=password],input:not([type]){background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;outline:0}
+input:focus{border-color:var(--ac)}
+input[type=range]{accent-color:var(--ac);width:100%}
+#desktop{position:fixed;inset:0;background:linear-gradient(135deg,#77216f,#2c001e 55%,#e95420 140%);background-size:cover;transition:background .4s}
+#dim{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:9950}
+body.out #dock,body.out #icons,body.out #top{display:none}
+#top{position:fixed;top:0;left:0;right:0;height:32px;background:var(--panel);display:flex;align-items:center;justify-content:space-between;padding:0 10px;z-index:9000;backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--bd)}
 #top .l,#top .r{display:flex;gap:12px;align-items:center;flex:1}
-#top .r{justify-content:flex-end;position:relative}
+#top .r{justify-content:flex-end;cursor:pointer}#top .r span{padding:2px 3px}
 #top .c{font-weight:600;cursor:default}
-#top .act{cursor:pointer;padding:4px 10px;border-radius:12px;font-weight:600}
-#top .act:hover{background:#ffffff22}
-#pw{cursor:pointer;padding:4px 8px;border-radius:12px}#pw:hover{background:#ffffff22}
-#dock{position:fixed;left:8px;top:44px;bottom:12px;width:58px;background:var(--panel);border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;z-index:8000;backdrop-filter:blur(8px);overflow:auto;scrollbar-width:none}
-#dock .it{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-size:24px;cursor:pointer;position:relative;flex:none}
-#dock .it:hover{background:#ffffff26}
-#dock .it.run::before{content:"";position:absolute;left:-7px;top:19px;width:5px;height:5px;border-radius:50%;background:var(--ac)}
-#dock .sep{width:30px;height:1px;background:#ffffff33;flex:none;margin:3px 0}
-#dock .it .tip{display:none;position:absolute;left:54px;background:#000d;padding:3px 8px;border-radius:6px;font-size:12px;white-space:nowrap;z-index:5}
+#top .act{cursor:pointer;padding:4px 12px;border-radius:14px;font-weight:600}#top .act:hover{background:var(--hov)}
+#appname{color:var(--mut);font-size:13px;max-width:30vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#usr{background:var(--hov);border-radius:12px;padding:2px 10px!important;font-weight:600}
+#dock{position:fixed;left:10px;top:46px;bottom:14px;width:60px;background:var(--panel);border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;z-index:8000;backdrop-filter:blur(14px);overflow:auto;scrollbar-width:none;box-shadow:0 8px 30px #0006,0 0 0 1px var(--bd)}
+#dock .it{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:25px;cursor:pointer;position:relative;flex:none;transition:transform .15s,background .15s}
+#dock .it:hover{background:var(--hov);transform:scale(1.1)}
+#dock .it.run::before{content:"";position:absolute;left:-7px;top:20px;width:5px;height:5px;border-radius:50%;background:var(--ac)}
+#dock .sep{width:30px;height:1px;background:var(--bd);flex:none;margin:3px 0}
+#dock .it .tip{display:none;position:absolute;left:58px;background:#000d;color:#fff;padding:4px 9px;border-radius:7px;font-size:12px;white-space:nowrap;z-index:5}
 #dock .it:hover .tip{display:block}
 #icons{position:fixed;top:48px;right:16px;display:flex;flex-direction:column;gap:14px;z-index:1}
-.dico{width:84px;text-align:center;cursor:pointer;padding:6px;border-radius:8px;font-size:12px;text-shadow:0 1px 3px #000}
-.dico:hover{background:#ffffff22}.dico i{display:block;font-style:normal;font-size:38px}
-.win{position:fixed;background:var(--win);border-radius:10px 10px 6px 6px;box-shadow:0 12px 40px #000a,0 0 0 1px #ffffff18;display:flex;flex-direction:column;min-width:260px;min-height:150px;resize:both;overflow:hidden}
+.dico{width:88px;text-align:center;cursor:pointer;padding:6px;border-radius:10px;font-size:12px;color:#fff;text-shadow:0 1px 4px #000}
+.dico:hover{background:#ffffff22}.dico i{display:block;font-style:normal;font-size:40px}
+.win{position:fixed;background:var(--win);border-radius:12px 12px 8px 8px;box-shadow:0 14px 44px #0009,0 0 0 1px var(--bd);display:flex;flex-direction:column;min-width:270px;min-height:160px;resize:both;overflow:hidden;animation:pop .18s ease}
+@keyframes pop{from{opacity:0;transform:scale(.94)}}
 .win.max{inset:32px 0 0 0!important;width:auto!important;height:auto!important;border-radius:0;resize:none}
-.win .tb{height:36px;background:var(--tb);display:flex;align-items:center;justify-content:space-between;padding:0 10px;cursor:default;flex:none}
-.win:not(.foc) .tb{background:#2f2f2f;color:var(--mut)}
+.win .tb{height:38px;background:var(--tb);display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 14px;cursor:default;flex:none;font-weight:600}
+.win:not(.foc) .tb{background:var(--tbi);color:var(--mut)}
 .win .wb{display:flex;gap:8px}
-.win .wb b{width:20px;height:20px;border-radius:50%;background:#555;display:grid;place-items:center;font-size:11px;cursor:pointer;font-weight:400}
-.win .wb b:hover{background:#777}.win .wb .cls:hover{background:var(--ac)}
+.win .wb b{width:22px;height:22px;border-radius:50%;background:var(--hov);display:grid;place-items:center;font-size:11px;cursor:pointer;font-weight:400}
+.win .wb b:hover{background:var(--btnh)}.win .wb .cls:hover{background:#c01c28;color:#fff}
 .win .bd{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
-.term{background:#300a24;font:13px/1.35 var(--mono);padding:8px;overflow:auto;flex:1;user-select:text;cursor:text}
+.term{background:#2a0a22;color:#eee;font:13px/1.4 var(--mono);padding:10px;overflow:auto;flex:1;user-select:text;cursor:text}
 .term pre{font:inherit;white-space:pre-wrap;word-break:break-all}
-.term .pl{display:flex;gap:0;white-space:pre}.term .pl input{flex:1;background:none;border:0;outline:0;font:inherit;min-width:0}
+.term .pl{display:flex;white-space:pre}.term .pl input{flex:1;background:none;border:0;outline:0;font:inherit;min-width:0;color:#eee;padding:0;border-radius:0}
 .g{color:#8ae234;font-weight:700}.b{color:#729fcf;font-weight:700}.y{color:#fce94f}.r{color:#ef2929}.m{color:#ad7fa8}.c{color:#34e2e2}.d{color:#888}
-.fbar{display:flex;gap:6px;padding:8px;background:#333;align-items:center;flex:none}
-.fbar .path{flex:1;background:#222;border:1px solid #555;border-radius:6px;padding:4px 8px;outline:0;min-width:0;user-select:text}
-.fgrid{flex:1;overflow:auto;padding:10px;display:grid;grid-template-columns:repeat(auto-fill,92px);grid-auto-rows:92px;gap:6px;align-content:start}
-.fi{text-align:center;padding:6px 2px;border-radius:8px;font-size:12px;cursor:pointer;word-break:break-all;overflow:hidden}
-.fi i{display:block;font-style:normal;font-size:34px}.fi:hover{background:#ffffff14}.fi.sel{background:#e9542055}
-.ed{flex:1;resize:none;border:0;outline:0;background:#1e1e1e;padding:10px;font:13px/1.5 var(--mono);tab-size:4;user-select:text;min-height:0}
-.stat{padding:4px 10px;background:#333;font-size:12px;color:var(--mut);display:flex;justify-content:space-between;flex:none}
+.fbar{display:flex;gap:6px;padding:8px;background:var(--tbi);align-items:center;flex:none;flex-wrap:wrap;border-bottom:1px solid var(--bd)}
+.fbar .path{flex:1;min-width:120px;user-select:text}
+.fmain{flex:1;display:flex;min-height:0}
+.side{width:160px;background:var(--tbi);padding:8px;display:flex;flex-direction:column;gap:2px;overflow:auto;flex:none;border-right:1px solid var(--bd)}
+.side div{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap}.side div:hover{background:var(--hov)}.side div.on{background:var(--ac);color:#fff}
+.fgrid{flex:1;overflow:auto;padding:10px;display:grid;grid-template-columns:repeat(auto-fill,94px);grid-auto-rows:94px;gap:6px;align-content:start}
+.fi{text-align:center;padding:6px 2px;border-radius:10px;font-size:12px;cursor:pointer;word-break:break-all;overflow:hidden}
+.fi i{display:block;font-style:normal;font-size:34px}.fi:hover{background:var(--hov)}.fi.sel{background:color-mix(in srgb,var(--ac) 35%,transparent)}
+.ed{flex:1;resize:none;border:0;outline:0;background:var(--in);padding:12px;font:13px/1.55 var(--mono);tab-size:4;user-select:text;min-height:0}
+.stat{padding:5px 12px;background:var(--tbi);font-size:12px;color:var(--mut);display:flex;justify-content:space-between;flex:none;border-top:1px solid var(--bd)}
 .pad{padding:16px;overflow:auto;flex:1;user-select:text}
-.pad h3{margin:12px 0 8px}
-table{border-collapse:collapse;width:100%}td,th{padding:4px 8px;text-align:left;border-bottom:1px solid #444;font-size:13px}
-.wps{display:grid;grid-template-columns:repeat(auto-fill,110px);gap:10px}
-.wp{height:70px;border-radius:8px;cursor:pointer;border:2px solid transparent}.wp.on{border-color:#fff}
-#ctx{position:fixed;background:#333;border-radius:8px;padding:4px;z-index:9500;box-shadow:0 8px 24px #000a;display:none}
-#ctx div{padding:6px 14px;border-radius:5px;cursor:pointer}#ctx div:hover{background:var(--ac)}
-#launcher{position:fixed;inset:32px 0 0 0;background:#000c;z-index:8500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
-#launcher .grid{display:grid;grid-template-columns:repeat(3,110px);gap:20px}
-#launcher .app{text-align:center;cursor:pointer;padding:10px;border-radius:10px}#launcher .app:hover{background:#ffffff22}#launcher .app i{display:block;font-style:normal;font-size:44px}
-#modal{position:fixed;inset:0;background:#0008;z-index:9800;display:none;align-items:center;justify-content:center}
-#modal .box{background:#333;padding:18px;border-radius:12px;min-width:300px;display:flex;flex-direction:column;gap:10px}
-#modal input{background:#222;border:1px solid #666;border-radius:6px;padding:7px;outline:0}
+.pad h3{margin:14px 0 8px}.pad h3:first-child{margin-top:0}
+.tabs{display:flex;gap:4px;padding:8px 10px 0;background:var(--tbi);flex:none;border-bottom:1px solid var(--bd);overflow:auto}
+.tab{padding:8px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap;color:var(--mut)}.tab:hover{color:var(--tx)}.tab.on{background:var(--win);color:var(--tx);font-weight:600;box-shadow:inset 0 -2px var(--ac)}
+.tbl{border-collapse:collapse;width:100%}.tbl td,.tbl th{padding:7px 8px;text-align:left;border-bottom:1px solid var(--bd);font-size:13px}.tbl th{color:var(--mut);font-weight:600}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--hov)}.badge.adm{background:var(--ac);color:#fff}
+.logbox{background:#111;color:#cfc;font:12px/1.5 var(--mono);padding:10px;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:100%;user-select:text}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.svc{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:var(--tbi);margin-bottom:6px}
+.wps{display:grid;grid-template-columns:repeat(auto-fill,100px);gap:10px}
+.wp{height:64px;border-radius:10px;cursor:pointer;border:2px solid transparent}.wp.on{border-color:var(--tx)}
+.acs{display:flex;gap:10px}.acs i{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent}.acs i.on{border-color:var(--tx)}
+.calc{display:flex;flex-direction:column;flex:1;padding:10px;gap:8px;background:var(--win)}
+.calc .scr{background:var(--in);border-radius:10px;padding:10px 14px;text-align:right;min-height:78px}.calc .scr small{color:var(--mut);display:block;height:18px}.calc .scr div{font-size:32px;font-weight:600;overflow:hidden}
+.calc .keys{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.calc .keys button{font-size:18px;padding:0}.calc .keys .op{background:var(--ac);color:#fff}
+#ctx{position:fixed;background:var(--panel);backdrop-filter:blur(14px);border-radius:10px;padding:5px;z-index:9500;box-shadow:0 8px 28px #0008,0 0 0 1px var(--bd);display:none}
+#ctx div{padding:7px 16px;border-radius:6px;cursor:pointer}#ctx div:hover{background:var(--ac);color:#fff}
+#launcher{position:fixed;inset:32px 0 0 0;background:#000b;z-index:8500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(14px)}
+#launcher .lw{display:flex;flex-direction:column;gap:24px;align-items:center;color:#fff}
+#launcher input{width:320px;background:#ffffff22;border:1px solid #ffffff33;color:#fff;text-align:center;border-radius:20px}
+#launcher .grid{display:grid;grid-template-columns:repeat(4,110px);gap:18px}
+#launcher .app{text-align:center;cursor:pointer;padding:12px 6px;border-radius:12px;font-size:13px}#launcher .app:hover{background:#ffffff22}#launcher .app i{display:block;font-style:normal;font-size:44px}
+#qs{position:fixed;top:38px;right:8px;width:300px;background:var(--panel);backdrop-filter:blur(18px);border-radius:16px;padding:14px;z-index:9100;display:none;box-shadow:0 12px 40px #0009,0 0 0 1px var(--bd);animation:pop .15s ease}
+#qs .qh{display:flex;gap:12px;align-items:center;margin-bottom:12px}#qs small{color:var(--mut)}#qs label{display:flex;gap:10px;align-items:center;margin:10px 0}
+#qs .qb{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.av{width:42px;height:42px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}.av.big{width:96px;height:96px;font-size:42px}
+#toasts{position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:9900;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--panel);backdrop-filter:blur(14px);padding:10px 18px;border-radius:14px;box-shadow:0 8px 28px #0008,0 0 0 1px var(--bd);display:flex;gap:10px;animation:pop .25s ease;transition:opacity .3s}.toast.out{opacity:0}
+#modal{position:fixed;inset:0;background:#0007;z-index:9800;display:none;align-items:center;justify-content:center}
+#modal .box{background:var(--win);padding:20px;border-radius:14px;min-width:320px;max-width:90vw;display:flex;flex-direction:column;gap:12px;box-shadow:0 16px 50px #000a,0 0 0 1px var(--bd);animation:pop .15s ease}
 #modal .bt{display:flex;gap:8px;justify-content:flex-end}
-#boot,#off{position:fixed;inset:0;background:#000;z-index:9999;font:13px/1.5 var(--mono);color:#ccc;padding:24px;overflow:hidden}
-#off{display:none;place-items:center;text-align:center;cursor:pointer;font:16px system-ui}
-#menu{position:absolute;right:0;top:32px;background:#333;border-radius:8px;padding:4px;display:none;box-shadow:0 8px 24px #000a}
-#menu div{padding:7px 18px;cursor:pointer;border-radius:5px}#menu div:hover{background:var(--ac)}
+#login{position:fixed;inset:0;z-index:9700;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000a;backdrop-filter:blur(30px);color:#fff;transition:opacity .35s}
+#login.fade{opacity:0}
+#login .lclock{position:absolute;top:8vh;text-align:center}.lt{font-size:72px;font-weight:300;letter-spacing:2px}.ld{font-size:18px;opacity:.8;text-transform:capitalize}
+#login .lbox{display:flex;flex-direction:column;gap:12px;align-items:center;min-width:300px;margin-top:6vh}
+#login .lbox input{width:300px;background:#ffffff1f;border:1px solid #ffffff44;color:#fff;text-align:center;padding:10px}#login .lbox input::placeholder{color:#ffffffaa}
+#login .lbox button{color:#fff}#login .lbox button:not(.pri){background:#ffffff26}
+.lusers{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;max-width:80vw}
+.lu{text-align:center;cursor:pointer;padding:14px 18px;border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:600}.lu:hover{background:#ffffff22}.lu small{font-weight:400;opacity:.7}
+.lrow{display:flex;gap:8px}.lerr{color:#ff8a80;min-height:18px;font-size:13px;text-align:center}
+.llink{cursor:pointer;opacity:.85;text-decoration:underline}
+.lhint{position:absolute;bottom:7vh;background:#ffffff1f;padding:10px 16px;border-radius:12px;font-size:13px}
+.lpow{position:absolute;right:24px;bottom:24px}.lpow button{font-size:20px;background:#ffffff26;color:#fff}
+.shake{animation:shake .35s}@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+#boot,#off{position:fixed;inset:0;background:#000;z-index:9990;font:13px/1.55 var(--mono);color:#ccc;padding:24px;overflow:hidden;white-space:pre}
+#off{display:none;place-items:center;text-align:center;cursor:pointer;font:16px system-ui;white-space:normal}
+#boot{z-index:9999}
 </style>
 </head>
-<body>
-<div id="desktop"></div>
+<body class="out">
+<div id="desktop"></div><div id="dim"></div>
 <div id="top">
-  <div class="l"><span class="act" id="actBtn">Activités</span></div>
+  <div class="l"><span class="act" id="actBtn">Activités</span><span id="appname"></span></div>
   <div class="c" id="clock"></div>
-  <div class="r"><span title="Wi-Fi">📶</span><span title="Son">🔊</span><span title="Batterie" id="bat">🔋</span><span id="pw">⏻</span>
-    <div id="menu"><div data-a="reboot">🔄 Redémarrer</div><div data-a="off">⏻ Éteindre</div></div></div>
+  <div class="r" id="tray"><span id="net">📶</span><span id="vol">🔊</span><span id="bat">🔋</span><span id="usr"></span></div>
 </div>
 <div id="dock"></div>
 <div id="icons"></div>
-<div id="launcher"><div class="grid"></div></div>
+<div id="launcher"><div class="lw"><input id="ls" placeholder="Rechercher une application…" autocomplete="off"><div class="grid"></div></div></div>
+<div id="qs"></div>
 <div id="ctx"></div>
-<div id="modal"><div class="box"><div id="mt"></div><input id="mi"><div class="bt"><button id="mc">Annuler</button><button id="mo" style="background:var(--ac)">OK</button></div></div></div>
+<div id="toasts"></div>
+<div id="modal"><div class="box"><div id="mt"></div><input id="mi"><div class="bt"><button id="mc">Annuler</button><button id="mo" class="pri">OK</button></div></div></div>
+<div id="login"></div>
 <div id="off"><div><div style="font-size:60px">⏻</div><p style="margin-top:10px">Système éteint.<br>Clique pour redémarrer.</p></div></div>
 <div id="boot"></div>
 
 <script>
-const $=(s,e=document)=>e.querySelector(s);
+const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const plain=h=>{const d=document.createElement('div');d.innerHTML=h;return d.textContent};
-const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-let bootTime=Date.now();
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const ssGet=k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},ssSet=(k,v)=>{try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}};
+let bootTime=Date.now(),cur=null;
+
+/* ---------- Utilisateurs & mots de passe ---------- */
+let users={};try{users=JSON.parse(lsGet('wl2users'))||{}}catch(e){}
+const fbHash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return 'x:'+h.toString(16)};
+async function hashPw(pw,salt){const s=salt+':'+pw;try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return fbHash(s)}}
+async function checkPw(name,pw){const u=users[name];if(!u)return false;if(u.h.startsWith('x:'))return u.h===fbHash(u.salt+':'+pw);return (await hashPw(pw,u.salt))===u.h}
+const rnd=()=>Math.random().toString(36).slice(2,10);
+const isAdmin=u=>u==='root'||!!(users[u]&&users[u].role==='admin');
+const homeP=u=>u==='root'?['root']:['home',u];
+const saveUsers=()=>{lsSet('wl2users',JSON.stringify(users));syncSys()};
+async function mkUser(name,pw,role){const salt=rnd();users[name]={h:await hashPw(pw,salt),salt,role:role||'user',created:Date.now(),last:null};ensureHome(name);saveUsers()}
+async function setPw(name,pw){const salt=rnd();users[name].salt=salt;users[name].h=await hashPw(pw,salt);delete users[name].def;saveUsers()}
 
 /* ---------- Système de fichiers ---------- */
-const D=c=>({t:'d',c:c||{}}), F=s=>({t:'f',s:s||''});
-function defaultFS(){return D({
- home:D({user:D({
-  Bureau:D(),Documents:D({'projet.md':F('# Mon projet\n\nBienvenue dans WebLinux !\n- [x] Ouvrir le terminal\n- [ ] Tout casser\n')}),
-  Téléchargements:D(),Images:D(),
-  'bonjour.txt':F('Salut ! Ce système tourne entièrement dans ton navigateur.\nEssaie : ls, cd, cat, mkdir, neofetch, tree, cowsay...\n'),
-  '.bashrc':F('# ~/.bashrc\nalias ll="ls -l"\n')})}),
- etc:D({hostname:F('weblinux\n'),'os-release':F('NAME="WebLinux"\nVERSION="1.0 (Navigateur)"\nID=weblinux\nPRETTY_NAME="WebLinux 1.0"\n'),passwd:F('root:x:0:0:root:/root:/bin/bash\nuser:x:1000:1000:user:/home/user:/bin/bash\n')}),
- usr:D({bin:D(),lib:D()}),var:D({log:D({'syslog':F('Boot OK\nSystemd: tous les services sont démarrés\n')})}),
- tmp:D(),bin:D({ls:F('\x7fELF'),cat:F('\x7fELF'),bash:F('\x7fELF')}),root:D()});}
-let fs=null;try{fs=JSON.parse(store.get('wlfs'))}catch(e){}
-if(!fs||fs.t!=='d')fs=defaultFS();
-const saveFS=()=>store.set('wlfs',JSON.stringify(fs));
-const norm=(p,cwd)=>{if(p==='~'||p.startsWith('~/'))p='/home/user'+p.slice(1);const parts=p.startsWith('/')?[]:[...cwd];for(const s of p.split('/')){if(!s||s==='.')continue;if(s==='..')parts.pop();else parts.push(s)}return parts};
+const D=c=>({t:'d',c:c||{}}),F=s=>({t:'f',s:s||''});
+const homeFiles=n=>D({Bureau:D(),Documents:D(),Téléchargements:D(),Images:D(),'bonjour.txt':F(`Salut ${n} ! Ce système tourne entièrement dans ton navigateur.\nEssaie : ls, cd, cat, mkdir, neofetch, tree, cowsay...\nLes administrateurs peuvent utiliser sudo (tape help).\n`)});
+function defaultFS(){return D({home:D({}),
+ etc:D({hostname:F('weblinux\n'),'os-release':F('NAME="WebLinux"\nVERSION="2.0"\nPRETTY_NAME="WebLinux 2.0"\n'),passwd:F(),shadow:F()}),
+ usr:D({bin:D(),lib:D()}),var:D({log:D({syslog:F('Boot OK\nSystemd: tous les services sont démarrés\n'),'auth.log':F()})}),
+ tmp:D(),bin:D({ls:F('\x7fELF'),cat:F('\x7fELF'),bash:F('\x7fELF')}),
+ root:D({'secret.txt':F('Bravo, tu es root ! 🎉\nAvec de grands pouvoirs viennent de grandes responsabilités.\n'),'.bash_history':F()})})}
+let fs=null;try{fs=JSON.parse(lsGet('wl2fs'))}catch(e){}
+if(!fs||fs.t!=='d'||!fs.c.home||!fs.c.var)fs=defaultFS();
+const saveFS=()=>lsSet('wl2fs',JSON.stringify(fs));
+function ensureHome(n){if(!fs.c.home)fs.c.home=D();if(!fs.c.home.c[n])fs.c.home.c[n]=homeFiles(n);saveFS()}
+function syncSys(){const e=fs.c.etc;if(!e||e.t!=='d')return;let p='root:x:0:0:root:/root:/bin/bash\n',s='root:*:\n',i=1000;for(const n in users){const id=i++;p+=`${n}:x:${id}:${id}:${n}:/home/${n}:/bin/bash\n`;s+=`${n}:${users[n].h.slice(0,43)}:\n`}e.c.passwd=F(p);e.c.shadow=F(s);saveFS()}
+const norm=(p,cwd,hp)=>{if(p==='~'||p.startsWith('~/'))p='/'+hp.join('/')+p.slice(1);const parts=p.startsWith('/')?[]:[...cwd];for(const s of p.split('/')){if(!s||s==='.')continue;if(s==='..')parts.pop();else parts.push(s)}return parts};
 const get=parts=>{let n=fs;for(const s of parts){if(!n||n.t!=='d'||!Object.prototype.hasOwnProperty.call(n.c,s))return null;n=n.c[s]}return n};
 const pstr=parts=>'/'+parts.join('/');
-const short=parts=>{const s=pstr(parts);return s==='/home/user'?'~':s.startsWith('/home/user/')?'~'+s.slice(10):s};
 const sortNames=n=>Object.keys(n.c).sort((a,b)=>(n.c[a].t===n.c[b].t?a.localeCompare(b,'fr'):n.c[a].t==='d'?-1:1));
+function canDo(u,p,w){if(u==='root')return true;const s=pstr(p);
+ if(s==='/root'||s.startsWith('/root/')||s==='/etc/shadow'||s==='/var/log/auth.log')return false;
+ const m=s.match(/^\/home\/([^\/]+)/);if(m&&m[1]!==u)return false;
+ if(!w)return true;return s==='/tmp'||s.startsWith('/tmp/')||s.startsWith('/home/'+u+'/')}
+const owner=p=>p[0]==='root'?'root':(p[0]==='home'&&p[1])?p[1]:'root';
+function logEvent(proc,msg){try{const d=fs.c.var.c.log;const t=new Date().toISOString().replace('T',' ').slice(0,19);const l=(d.c['auth.log']?d.c['auth.log'].s:'').split('\n').filter(Boolean);l.push(`${t} weblinux ${proc}: ${msg}`);d.c['auth.log']=F(l.slice(-300).join('\n')+'\n');saveFS()}catch(e){}}
+function downloadBackup(){const b=new Blob([JSON.stringify({v:2,fs,users},null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='weblinux-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+function countFiles(n){return n.t==='f'?1:Object.values(n.c).reduce((s,x)=>s+countFiles(x),0)}
 
-/* ---------- Gestionnaire de fenêtres ---------- */
-let zTop=100,wins=[];
+/* ---------- Services (simulés) ---------- */
+const SVC={ssh:{d:'Serveur SSH',on:true},cron:{d:'Tâches planifiées',on:true},network:{d:'Réseau',on:true},firewall:{d:'Pare-feu (ufw)',on:false},'weblinux-wm':{d:'Gestionnaire de fenêtres',on:true}};
+const netIcon=()=>{$('#net').textContent=SVC.network.on?'📶':'⛔'};
+
+/* ---------- Réglages par utilisateur ---------- */
+const WPS=['linear-gradient(135deg,#77216f,#2c001e 55%,#e95420 140%)','linear-gradient(160deg,#0f2027,#203a43,#2c5364)','linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#134e5e,#71b280)','linear-gradient(135deg,#42275a,#734b6d)','radial-gradient(circle at 30% 20%,#3a1c71,#d76d77 60%,#ffaf7b)','linear-gradient(135deg,#000428,#004e92)','#1a1a1a'];
+const ACS=['#e95420','#3584e4','#2ec27e','#9141ac','#e5a50a','#e01b24'];
+const defSet={th:'dark',ac:'#e95420',wp:0,vol:60,br:100};let S={...defSet};
+function applyS(){document.documentElement.dataset.theme=S.th;document.documentElement.style.setProperty('--ac',S.ac);$('#desktop').style.background=WPS[S.wp]||WPS[0];$('#desktop').style.backgroundSize='cover';$('#dim').style.opacity=(100-S.br)/100*.6;$('#vol').textContent=S.vol==0?'🔇':'🔊'}
+const loadS=u=>{let o={};try{o=JSON.parse(lsGet('wl2set_'+u))||{}}catch(e){}S={...defSet,...o};applyS()};
+const saveS=()=>{if(cur)lsSet('wl2set_'+cur,JSON.stringify(S))};
+
+/* ---------- Notifications & modale ---------- */
+function toast(msg,ic){const t=document.createElement('div');t.className='toast';t.innerHTML=`<span>${ic||'ℹ️'}</span><span>${esc(msg)}</span>`;$('#toasts').appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320)},3800)}
+function ask(title,def,cb,type){const m=$('#modal'),i=$('#mi');$('#mt').textContent=title;i.type=type==='password'?'password':'text';i.value=def||'';i.style.display=type==='confirm'?'none':'';m.style.display='flex';if(type!=='confirm'){i.focus();i.select()}
+ const done=v=>{m.style.display='none';$('#mo').onclick=$('#mc').onclick=i.onkeydown=null;if(v!=null&&(v!==''||type==='confirm'))cb(v)};
+ $('#mo').onclick=()=>done(type==='confirm'?true:i.value);$('#mc').onclick=()=>done(null);i.onkeydown=e=>{if(e.key==='Enter')done(i.value);if(e.key==='Escape')done(null)}}
+
+/* ---------- Fenêtres ---------- */
+let zTop=100,wins=[],pidN=1000;
 function win(title,icon,body,o={}){
  const w=Math.min(o.w||640,innerWidth-20),h=Math.min(o.h||420,innerHeight-60);
  const el=document.createElement('div');el.className='win';
- el.style.cssText=`width:${w}px;height:${h}px;left:${o.x??Math.max(80,90+wins.length*28)}px;top:${o.y??Math.max(44,60+wins.length*28)}px`;
- el.innerHTML=`<div class="tb"><span class="ti"></span><span class="wb"><b class="min">–</b><b class="max">▢</b><b class="cls">✕</b></span></div><div class="bd"></div>`;
+ el.style.cssText=`width:${w}px;height:${h}px;left:${o.x??Math.max(90,100+wins.length*28)}px;top:${o.y??Math.max(44,60+wins.length*28)}px`;
+ el.innerHTML=`<div class="tb"><span class="ti"></span><span class="wb"><b class="min" title="Réduire">–</b><b class="max" title="Agrandir">▢</b><b class="cls" title="Fermer">✕</b></span></div><div class="bd"></div>`;
  $('.bd',el).appendChild(body);document.body.appendChild(el);
- const W={el,icon,title,hidden:false,onclose:o.onclose,
+ const W={el,icon,title,pid:++pidN,hidden:false,onclose:o.onclose,
   setTitle(t){W.title=t;$('.ti',el).textContent=icon+' '+t;renderDock()},
-  focus(){wins.forEach(x=>x.el.classList.remove('foc'));if(W.hidden){W.hidden=false;el.style.display='flex'}el.classList.add('foc');el.style.zIndex=++zTop;renderDock();o.onfocus&&o.onfocus()},
+  focus(){wins.forEach(x=>x.el.classList.remove('foc'));if(W.hidden){W.hidden=false;el.style.display='flex'}el.classList.add('foc');el.style.zIndex=++zTop;renderDock()},
   close(){W.onclose&&W.onclose();el.remove();wins=wins.filter(x=>x!==W);renderDock()},
   hide(){W.hidden=true;el.style.display='none';el.classList.remove('foc');renderDock()}};
  W.setTitle(title);wins.push(W);
@@ -132,289 +210,491 @@ function win(title,icon,body,o={}){
  tb.addEventListener('pointerdown',e=>{if(e.target.closest('.wb')||el.classList.contains('max'))return;
   const sx=e.clientX-el.offsetLeft,sy=e.clientY-el.offsetTop;tb.setPointerCapture(e.pointerId);
   const mv=ev=>{el.style.left=Math.max(-el.offsetWidth+80,Math.min(innerWidth-80,ev.clientX-sx))+'px';el.style.top=Math.max(32,Math.min(innerHeight-40,ev.clientY-sy))+'px'};
-  const up=()=>{tb.removeEventListener('pointermove',mv);tb.removeEventListener('pointerup',up)};
+  const up=ev=>{tb.removeEventListener('pointermove',mv);tb.removeEventListener('pointerup',up);
+   if(ev.clientX<10){el.style.left='0';el.style.top='32px';el.style.width='50vw';el.style.height='calc(100vh - 32px)'}
+   else if(ev.clientX>innerWidth-10){el.style.left='50vw';el.style.top='32px';el.style.width='50vw';el.style.height='calc(100vh - 32px)'}
+   else if(ev.clientY<6)el.classList.add('max')};
   tb.addEventListener('pointermove',mv);tb.addEventListener('pointerup',up)});
  W.focus();return W;
 }
 
-/* ---------- Dock / lanceur ---------- */
+/* ---------- Dock, lanceur, menu rapide ---------- */
 const APPS=[
- {id:'term',n:'Terminal',i:'🖥️',f:()=>openTerminal()},
- {id:'files',n:'Fichiers',i:'📁',f:()=>openFiles()},
- {id:'edit',n:'Éditeur de texte',i:'📝',f:()=>openEditor('/home/user/bonjour.txt')},
- {id:'mon',n:'Moniteur système',i:'📊',f:()=>openMonitor()},
- {id:'set',n:'Paramètres',i:'⚙️',f:()=>openSettings()},
- {id:'about',n:'À propos',i:'🐧',f:()=>openAbout()}];
+ {n:'Terminal',i:'🖥️',f:()=>openTerminal()},
+ {n:'Fichiers',i:'📁',f:()=>openFiles()},
+ {n:'Éditeur de texte',i:'📝',f:()=>openEditor(pstr(homeP(cur))+'/bonjour.txt')},
+ {n:'Calculatrice',i:'🧮',f:()=>openCalc()},
+ {n:'Moniteur système',i:'📊',f:()=>openMonitor()},
+ {n:'Administration',i:'🛡️',adm:1,f:()=>openAdmin()},
+ {n:'Paramètres',i:'⚙️',f:()=>openSettings()},
+ {n:'À propos',i:'🐧',f:()=>openAbout()}];
+const apps=()=>APPS.filter(a=>!a.adm||isAdmin(cur));
 function renderDock(){
  const d=$('#dock');d.innerHTML='';
- APPS.forEach(a=>{const e=document.createElement('div');e.className='it'+(wins.some(w=>w.icon===a.i)?' run':'');e.innerHTML=a.i+`<span class="tip">${a.n}</span>`;e.onclick=()=>a.f();d.appendChild(e)});
+ apps().forEach(a=>{const e=document.createElement('div');e.className='it'+(wins.some(w=>w.icon===a.i)?' run':'');e.innerHTML=a.i+`<span class="tip">${a.n}</span>`;e.onclick=()=>a.f();d.appendChild(e)});
  if(wins.length){const s=document.createElement('div');s.className='sep';d.appendChild(s)}
  wins.forEach(w=>{const e=document.createElement('div');e.className='it'+(w.el.classList.contains('foc')?' run':'');e.innerHTML=w.icon+`<span class="tip">${esc(w.title)}</span>`;
   e.onclick=()=>{if(w.hidden||!w.el.classList.contains('foc'))w.focus();else w.hide()};d.appendChild(e)});
+ const f=wins.find(w=>w.el.classList.contains('foc'));$('#appname').textContent=f?'· '+f.title:'';
 }
-const L=$('#launcher');
-$('#actBtn').onclick=()=>{L.style.display=L.style.display==='flex'?'none':'flex'};
-$('.grid',L).innerHTML=APPS.map((a,i)=>`<div class="app" data-i="${i}"><i>${a.i}</i>${a.n}</div>`).join('');
-L.onclick=e=>{const a=e.target.closest('.app');L.style.display='none';if(a)APPS[a.dataset.i].f()};
-
-/* ---------- Modale ---------- */
-function ask(title,def,cb){const m=$('#modal'),i=$('#mi');$('#mt').textContent=title;i.value=def||'';m.style.display='flex';i.focus();i.select();
- const done=v=>{m.style.display='none';$('#mo').onclick=$('#mc').onclick=i.onkeydown=null;if(v!=null&&v!=='')cb(v)};
- $('#mo').onclick=()=>done(i.value);$('#mc').onclick=()=>done(null);i.onkeydown=e=>{if(e.key==='Enter')done(i.value);if(e.key==='Escape')done(null)}}
+const LA=$('#launcher');
+function drawLauncher(q=''){$('.grid',LA).innerHTML=apps().filter(a=>a.n.toLowerCase().includes(q.toLowerCase())).map(a=>`<div class="app" data-n="${a.n}"><i>${a.i}</i>${a.n}</div>`).join('')}
+function toggleLauncher(){if(!cur)return;const on=LA.style.display==='flex';LA.style.display=on?'none':'flex';if(!on){$('#ls').value='';drawLauncher();$('#ls').focus()}}
+$('#actBtn').onclick=toggleLauncher;
+$('#ls').oninput=e=>drawLauncher(e.target.value);
+$('#ls').onkeydown=e=>{if(e.key==='Escape')toggleLauncher();if(e.key==='Enter'){const a=apps().find(a=>a.n.toLowerCase().includes(e.target.value.toLowerCase()));toggleLauncher();a&&a.f()}};
+LA.onclick=e=>{const a=e.target.closest('.app');if(a){const ap=APPS.find(x=>x.n===a.dataset.n);LA.style.display='none';ap.f()}else if(!e.target.closest('input'))LA.style.display='none'};
+const qs=$('#qs');
+function openQS(){if(!cur)return;if(qs.style.display==='block'){qs.style.display='none';return}
+ qs.innerHTML=`<div class="qh"><div class="av">${esc(cur[0].toUpperCase())}</div><div><b>${esc(cur)}</b><br><small>${isAdmin(cur)?'administrateur':'utilisateur'}</small></div></div><label>🔊<input type="range" min="0" max="100" value="${S.vol}" data-k="vol"></label><label>☀️<input type="range" min="20" max="100" value="${S.br}" data-k="br"></label><div class="qb"><button data-a="theme">${S.th==='dark'?'☀️ Thème clair':'🌙 Thème sombre'}</button><button data-a="lock">🔒 Verrouiller</button><button data-a="logout">🚪 Déconnexion</button><button data-a="reboot">🔄 Redémarrer</button><button data-a="off">⏻ Éteindre</button></div>`;
+ qs.style.display='block'}
+qs.oninput=e=>{const k=e.target.dataset.k;if(k){S[k]=+e.target.value;applyS();saveS()}};
+qs.onclick=e=>{e.stopPropagation();const a=e.target.dataset.a;if(!a)return;qs.style.display='none';
+ if(a==='theme'){S.th=S.th==='dark'?'light':'dark';applyS();saveS()}else if(a==='lock')lockScreen();else if(a==='logout')logout();else if(a==='reboot')boot(true);else if(a==='off')poweroff()};
+$('#tray').onclick=e=>{e.stopPropagation();openQS()};
 
 /* ---------- Ouvrir un chemin ---------- */
-function openPath(parts){const n=get(parts);if(!n)return;n.t==='d'?openFiles(parts):openEditor(pstr(parts))}
+function openPath(parts){const n=get(parts);if(!n)return;if(!canDo(cur,parts,false))return toast('Permission refusée','🔒');n.t==='d'?openFiles(parts):openEditor(pstr(parts))}
 
-/* ---------- Gestionnaire de fichiers ---------- */
+/* ---------- Fichiers ---------- */
 function openFiles(start){
- let cwd=start?[...start]:['home','user'],sel=null;
+ const hp=homeP(cur);let cwd=start?[...start]:[...hp],sel=null,hid=false;
+ const places=[['🏠','Dossier perso',hp],['🖥️','Bureau',[...hp,'Bureau']],['📄','Documents',[...hp,'Documents']],['⬇️','Téléchargements',[...hp,'Téléchargements']],['🖼️','Images',[...hp,'Images']],['🗂️','/tmp',['tmp']],['💽','Racine',[]]];
  const body=document.createElement('div');body.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
- body.innerHTML=`<div class="fbar"><button data-a="up" title="Dossier parent">⬆</button><button data-a="home" title="Dossier personnel">🏠</button><input class="path"><button data-a="nf">+ Fichier</button><button data-a="nd">+ Dossier</button><button data-a="del">🗑 Supprimer</button></div><div class="fgrid"></div><div class="stat"><span class="cnt"></span><span>Double-clic pour ouvrir</span></div>`;
- const W=win('Fichiers','📁',body,{w:660,h:440});
- const grid=$('.fgrid',body),path=$('.path',body);
- function draw(){const n=get(cwd);if(!n||n.t!=='d'){cwd=['home','user'];return draw()}
+ body.innerHTML=`<div class="fbar"><button data-a="up" title="Dossier parent">⬆</button><input class="path"><button data-a="nf">＋ Fichier</button><button data-a="nd">＋ Dossier</button><button data-a="del">🗑</button><label style="font-size:12px;color:var(--mut)"><input type="checkbox" class="hd"> cachés</label></div><div class="fmain"><div class="side"></div><div class="fgrid"></div></div><div class="stat"><span class="cnt"></span><span class="own"></span></div>`;
+ const W=win('Fichiers','📁',body,{w:700,h:460});
+ const grid=$('.fgrid',body),path=$('.path',body),side=$('.side',body);
+ const go=p=>{if(!get(p)||get(p).t!=='d')return;if(!canDo(cur,p,false))return toast('Permission refusée','🔒');cwd=p;draw()};
+ function draw(){let n=get(cwd);if(!n||n.t!=='d'){cwd=[...hp];n=get(cwd)}
   path.value=pstr(cwd);W.setTitle(cwd.length?cwd[cwd.length-1]:'/');sel=null;
-  const names=sortNames(n);$('.cnt',body).textContent=names.length+' élément(s)';
-  grid.innerHTML=names.map(k=>`<div class="fi" data-n="${esc(k)}"><i>${n.c[k].t==='d'?'📁':/\.(png|jpe?g|gif)$/i.test(k)?'🖼️':'📄'}</i>${esc(k)}</div>`).join('')||'<div style="color:#888;grid-column:1/-1">Dossier vide</div>'}
- grid.onclick=e=>{const f=e.target.closest('.fi');grid.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));if(f){f.classList.add('sel');sel=f.dataset.n}else sel=null};
- grid.ondblclick=e=>{const f=e.target.closest('.fi');if(!f)return;const p=[...cwd,f.dataset.n];if(get(p).t==='d'){cwd=p;draw()}else openPath(p)};
- path.onkeydown=e=>{if(e.key==='Enter'){const p=norm(path.value,cwd),n=get(p);if(n&&n.t==='d'){cwd=p;draw()}else path.value=pstr(cwd)}};
+  side.innerHTML=places.map((p,i)=>`<div data-p="${i}" class="${pstr(p[2])===pstr(cwd)?'on':''}">${p[0]} ${p[1]}</div>`).join('');
+  const names=sortNames(n).filter(k=>hid||k[0]!=='.');$('.cnt',body).textContent=names.length+' élément(s)';
+  $('.own',body).textContent=canDo(cur,[...cwd,'x'],true)?'Lecture / écriture':'🔒 Lecture seule';
+  grid.innerHTML=names.map(k=>`<div class="fi" data-n="${esc(k)}"><i>${n.c[k].t==='d'?'📁':/\.(png|jpe?g|gif)$/i.test(k)?'🖼️':'📄'}</i>${esc(k)}</div>`).join('')||'<div style="color:var(--mut);grid-column:1/-1">Dossier vide</div>'}
+ side.onclick=e=>{const d=e.target.closest('[data-p]');if(d){const p=places[d.dataset.p][2];ensureHome(cur);go([...p])}};
+ grid.onclick=e=>{const f=e.target.closest('.fi');$$('.sel',grid).forEach(x=>x.classList.remove('sel'));if(f){f.classList.add('sel');sel=f.dataset.n}else sel=null};
+ grid.ondblclick=e=>{const f=e.target.closest('.fi');if(!f)return;const p=[...cwd,f.dataset.n];if(get(p).t==='d')go(p);else openPath(p)};
+ path.onkeydown=e=>{if(e.key==='Enter'){const p=norm(path.value,cwd,hp);if(get(p)&&get(p).t==='d')go(p);else path.value=pstr(cwd)}};
+ $('.hd',body).onchange=e=>{hid=e.target.checked;draw()};
+ const canW=()=>canDo(cur,[...cwd,'x'],true)||(toast('Permission refusée (dossier en lecture seule)','🔒'),false);
  body.onclick=e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a)return;
-  if(a==='up'){cwd.pop();draw()}else if(a==='home'){cwd=['home','user'];draw()}
-  else if(a==='nf')ask('Nom du nouveau fichier','nouveau.txt',v=>{const n=get(cwd);if(!/[\/]/.test(v)&&!n.c[v]){n.c[v]=F();saveFS();draw()}});
-  else if(a==='nd')ask('Nom du nouveau dossier','Nouveau dossier',v=>{const n=get(cwd);if(!/[\/]/.test(v)&&!n.c[v]){n.c[v]=D();saveFS();draw()}});
-  else if(a==='del'&&sel){delete get(cwd).c[sel];saveFS();draw()}};
+  if(a==='up'){go(cwd.slice(0,-1))}
+  else if(a==='nf'){if(canW())ask('Nom du nouveau fichier','nouveau.txt',v=>{const n=get(cwd);if(!/[\/]/.test(v)&&!n.c[v]){n.c[v]=F();saveFS();draw()}})}
+  else if(a==='nd'){if(canW())ask('Nom du nouveau dossier','Nouveau dossier',v=>{const n=get(cwd);if(!/[\/]/.test(v)&&!n.c[v]){n.c[v]=D();saveFS();draw()}})}
+  else if(a==='del'&&sel&&canW()){delete get(cwd).c[sel];saveFS();draw()}};
  draw();return W;
 }
 
 /* ---------- Éditeur ---------- */
 function openEditor(p){
- const parts=norm(p,[]),node=get(parts);
+ const parts=norm(p,[],homeP(cur)),node=get(parts);
+ if(node&&node.t==='f'&&!canDo(cur,parts,false))return toast('Permission refusée','🔒');
  const body=document.createElement('div');body.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
- body.innerHTML=`<div class="fbar"><input class="path"><button class="sv" style="background:var(--ac)">💾 Enregistrer</button></div><textarea class="ed" spellcheck="false"></textarea><div class="stat"><span class="st">Prêt</span><span class="ln"></span></div>`;
+ body.innerHTML=`<div class="fbar"><input class="path"><button class="sv pri">💾 Enregistrer</button></div><textarea class="ed" spellcheck="false"></textarea><div class="stat"><span class="st">Prêt</span><span class="ln"></span></div>`;
  const ta=$('.ed',body),pi=$('.path',body),st=$('.st',body);
  ta.value=node&&node.t==='f'?node.s:'';pi.value=pstr(parts);
+ if(!canDo(cur,parts,true))st.textContent='🔒 Lecture seule (enregistrement refusé)';
  const info=()=>{$('.ln',body).textContent=ta.value.split('\n').length+' lignes · '+ta.value.length+' car.'};info();
- const W=win(parts[parts.length-1]||'Sans titre','📝',body,{w:600,h:420});
- const save=()=>{const np=norm(pi.value,['home','user']),par=get(np.slice(0,-1)),nm=np[np.length-1];
+ const W=win(parts[parts.length-1]||'Sans titre','📝',body,{w:620,h:430});
+ const save=()=>{const np=norm(pi.value,homeP(cur),homeP(cur)),par=get(np.slice(0,-1)),nm=np[np.length-1];
   if(!nm||!par||par.t!=='d'){st.textContent='❌ Chemin invalide';return}
-  if(par.c[nm]&&par.c[nm].t==='d'){st.textContent='❌ C\'est un dossier';return}
+  if(par.c[nm]&&par.c[nm].t==='d'){st.textContent=`❌ C'est un dossier`;return}
+  if(!canDo(cur,np,true)){st.textContent='🔒 Permission refusée';toast('Permission refusée','🔒');return}
   par.c[nm]=F(ta.value);saveFS();st.textContent='✅ Enregistré à '+new Date().toLocaleTimeString('fr-FR');W.setTitle(nm)};
  $('.sv',body).onclick=save;ta.oninput=()=>{info();st.textContent='Modifié…'};
- ta.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();save()}
-  if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart;ta.setRangeText('\t',s,ta.selectionEnd,'end')}};
+ ta.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();save()}if(e.key==='Tab'){e.preventDefault();ta.setRangeText('\t',ta.selectionStart,ta.selectionEnd,'end')}};
  setTimeout(()=>ta.focus(),50);return W;
+}
+
+/* ---------- Calculatrice ---------- */
+function openCalc(){
+ let c='0',acc=null,op=null,fresh=true;const body=document.createElement('div');body.className='calc';
+ body.innerHTML=`<div class="scr"><small></small><div></div></div><div class="keys">${['C','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','⌫','='].map(k=>`<button class="${'÷×−+='.includes(k)?'op':''}">${k}</button>`).join('')}</div>`;
+ const fmt=n=>isFinite(n)?String(+n.toPrecision(12)):'Erreur',calc=(a,b,o)=>o==='+'?a+b:o==='−'?a-b:o==='×'?a*b:b===0?NaN:a/b;
+ const show=()=>{$('.scr div',body).textContent=c;$('.scr small',body).textContent=op?`${fmt(acc)} ${op}`:''};
+ body.onclick=e=>{if(e.target.tagName!=='BUTTON')return;const k=e.target.textContent;
+  if(/\d/.test(k)){c=fresh||c==='0'?k:c+k;fresh=false}
+  else if(k==='.'){if(fresh){c='0.';fresh=false}else if(!c.includes('.'))c+='.'}
+  else if('÷×−+'.includes(k)){if(op&&!fresh){acc=calc(acc,+c,op);c=fmt(acc)}else acc=+c;op=k;fresh=true}
+  else if(k==='='){if(op){c=fmt(calc(acc,+c,op));op=null;acc=null;fresh=true}}
+  else if(k==='C'){c='0';acc=null;op=null;fresh=true}
+  else if(k==='±')c=fmt(-+c);else if(k==='%')c=fmt(+c/100);else if(k==='⌫')c=c.length>1?c.slice(0,-1):'0';
+  show()};
+ show();return win('Calculatrice','🧮',body,{w:300,h:430});
 }
 
 /* ---------- Moniteur système ---------- */
 function openMonitor(){
  const body=document.createElement('div');body.className='pad';
- body.innerHTML=`<canvas width="600" height="140" style="width:100%;height:140px;background:#1b1b1b;border-radius:8px"></canvas><p class="inf" style="margin:10px 0;color:#bbb"></p><h3>Processus</h3><table><thead><tr><th>PID</th><th>Nom</th><th>CPU</th><th>Mém</th></tr></thead><tbody></tbody></table>`;
+ body.innerHTML=`<canvas width="600" height="140" style="width:100%;height:140px;background:var(--in);border-radius:10px"></canvas><p class="inf" style="margin:10px 0;color:var(--mut)"></p><h3>Processus</h3><table class="tbl"><thead><tr><th>PID</th><th>Nom</th><th>CPU</th><th>Mém</th><th></th></tr></thead><tbody></tbody></table>`;
  const cv=$('canvas',body),cx=cv.getContext('2d');let data=Array(60).fill(10),v=15;
  const tick=()=>{v=Math.max(2,Math.min(95,v+(Math.random()-.48)*14));data.push(v);data.shift();
-  cx.clearRect(0,0,600,140);cx.strokeStyle='#333';for(let y=0;y<=140;y+=35){cx.beginPath();cx.moveTo(0,y);cx.lineTo(600,y);cx.stroke()}
-  cx.beginPath();data.forEach((d,i)=>cx[i?'lineTo':'moveTo'](i*10,140-d*1.4));cx.strokeStyle='#e95420';cx.lineWidth=2;cx.stroke();
-  cx.lineTo(590,140);cx.lineTo(0,140);cx.fillStyle='#e9542030';cx.fill();
-  const mem=navigator.deviceMemory?navigator.deviceMemory+' Go':'n/d',up=Math.floor((Date.now()-bootTime)/1000);
-  $('.inf',body).innerHTML=`CPU : <b>${v.toFixed(0)}%</b> · Cœurs : <b>${navigator.hardwareConcurrency||'?'}</b> · RAM : <b>${mem}</b> · Uptime : <b>${Math.floor(up/60)}m ${up%60}s</b>`;
-  const rows=[[1,'systemd'],[2,'kthreadd'],[88,'weblinux-wm'],...wins.map((w,i)=>[1000+i,w.title])];
-  $('tbody',body).innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${esc(r[1])}</td><td>${(Math.random()*(r[0]>999?6:1)).toFixed(1)}%</td><td>${(8+Math.random()*30).toFixed(0)} Mo</td></tr>`).join('')};
+  const ac=getComputedStyle(document.documentElement).getPropertyValue('--ac').trim()||'#e95420';
+  cx.clearRect(0,0,600,140);cx.strokeStyle='#8884';for(let y=0;y<=140;y+=35){cx.beginPath();cx.moveTo(0,y);cx.lineTo(600,y);cx.stroke()}
+  cx.beginPath();data.forEach((d,i)=>cx[i?'lineTo':'moveTo'](i*10,140-d*1.4));cx.strokeStyle=ac;cx.lineWidth=2;cx.stroke();
+  cx.lineTo(590,140);cx.lineTo(0,140);cx.globalAlpha=.2;cx.fillStyle=ac;cx.fill();cx.globalAlpha=1;
+  const up=Math.floor((Date.now()-bootTime)/1000);
+  $('.inf',body).innerHTML=`CPU : <b>${v.toFixed(0)}%</b> · Cœurs : <b>${navigator.hardwareConcurrency||'?'}</b> · RAM : <b>${navigator.deviceMemory?navigator.deviceMemory+' Go':'n/d'}</b> · Uptime : <b>${Math.floor(up/60)}m ${up%60}s</b>`;
+  const rows=[[1,'systemd'],[88,'weblinux-wm']].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${(Math.random()).toFixed(1)}%</td><td>${(8+Math.random()*30).toFixed(0)} Mo</td><td></td></tr>`).concat(wins.map(w=>`<tr><td>${w.pid}</td><td>${esc(w.title)}</td><td>${(Math.random()*6).toFixed(1)}%</td><td>${(20+Math.random()*60).toFixed(0)} Mo</td><td><button data-k="${w.pid}" title="Terminer">✕</button></td></tr>`));
+  $('tbody',body).innerHTML=rows.join('')};
+ body.onclick=e=>{const k=e.target.dataset.k;if(k){const w=wins.find(x=>x.pid==k);w&&w.close()}};
  tick();const iv=setInterval(tick,1000);
- return win('Moniteur système','📊',body,{w:640,h:480,onclose:()=>clearInterval(iv)});
+ return win('Moniteur système','📊',body,{w:660,h:500,onclose:()=>clearInterval(iv)});
+}
+
+/* ---------- Administration ---------- */
+function openAdmin(){
+ if(!isAdmin(cur))return toast('Réservé aux administrateurs','🔒');
+ let tab=0;const body=document.createElement('div');body.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
+ body.innerHTML=`<div class="tabs"></div><div class="pad" style="flex:1"></div>`;
+ const TABS=['👥 Utilisateurs','📜 Journal','🛠️ Système'],tb=$('.tabs',body),pad=$('.pad',body);
+ const fd=t=>t?new Date(t).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}):'—';
+ const admins=()=>Object.values(users).filter(u=>u.role==='admin').length;
+ const valid=n=>/^[a-z][a-z0-9_-]{1,15}$/.test(n)&&n!=='root'&&!users[n];
+ function draw(){
+  tb.innerHTML=TABS.map((t,i)=>`<span class="tab${i===tab?' on':''}" data-t="${i}">${t}</span>`).join('');
+  if(tab===0){pad.innerHTML=`<p style="margin-bottom:10px"><button class="pri" data-a="add">＋ Nouvel utilisateur</button></p><table class="tbl"><thead><tr><th>Utilisateur</th><th>Rôle</th><th>Créé</th><th>Dernière connexion</th><th></th></tr></thead><tbody>${Object.keys(users).map(n=>{const u=users[n];return `<tr><td><b>${esc(n)}</b>${n===cur?' <span class="badge">vous</span>':''}</td><td><span class="badge ${u.role==='admin'?'adm':''}">${u.role==='admin'?'admin':'utilisateur'}</span></td><td>${fd(u.created)}</td><td>${fd(u.last)}</td><td style="text-align:right;white-space:nowrap"><button data-a="pw" data-u="${esc(n)}" title="Changer le mot de passe">🔑</button> <button data-a="role" data-u="${esc(n)}" title="Changer le rôle">⇅</button> <button class="dan" data-a="del" data-u="${esc(n)}" title="Supprimer">🗑</button></td></tr>`}).join('')}</tbody></table>`}
+  else if(tab===1){const l=(fs.c.var.c.log.c['auth.log']||F()).s.split('\n').filter(Boolean).slice(-120).reverse();pad.innerHTML=`<div class="row"><button data-a="ref">🔄 Actualiser</button><button class="dan" data-a="clr">🧹 Vider</button><span style="color:var(--mut)">${l.length} entrée(s) récentes</span></div><div class="logbox">${l.length?esc(l.join('\n')):'(journal vide)'}</div>`}
+  else{const kb=Math.round((lsGet('wl2fs')||'').length/1024);pad.innerHTML=`<h3>Services</h3>${Object.keys(SVC).map(k=>`<div class="svc"><span><b>${k}</b> <span style="color:var(--mut)">— ${esc(SVC[k].d)}</span></span><button data-a="svc" data-s="${k}" class="${SVC[k].on?'pri':''}">${SVC[k].on?'● actif':'○ arrêté'}</button></div>`).join('')}<h3>Stockage</h3><p style="color:var(--mut)">${countFiles(fs)} fichiers · ${Object.keys(users).length} comptes · ~${kb} Ko utilisés dans le navigateur</p><h3>Maintenance</h3><div class="row"><button data-a="bk">💾 Sauvegarder (JSON)</button><button data-a="rfs">♻️ Réinitialiser les fichiers</button><button class="dan" data-a="rall">⚠️ Tout réinitialiser</button></div>`}
+ }
+ body.onclick=e=>{const t=e.target.closest('.tab');if(t){tab=+t.dataset.t;draw();return}
+  const b=e.target.closest('button');if(!b||!b.dataset.a)return;const a=b.dataset.a,u=b.dataset.u;
+  if(a==='add')ask('Nom du nouvel utilisateur','',n=>{n=n.trim().toLowerCase();if(!valid(n))return toast('Nom invalide ou déjà pris','⚠️');ask(`Mot de passe pour ${n}`,'',pw=>{if(pw.length<4)return toast('4 caractères minimum','⚠️');mkUser(n,pw,'user').then(()=>{logEvent('admin',`${cur} a créé ${n}`);toast(`Compte ${n} créé`,'✅');draw()})},'password')});
+  else if(a==='pw')ask(`Nouveau mot de passe pour ${u}`,'',v=>{if(v.length<4)return toast('4 caractères minimum','⚠️');setPw(u,v).then(()=>{logEvent('admin',`${cur} a changé le mot de passe de ${u}`);toast('Mot de passe modifié','🔑');draw()})},'password');
+  else if(a==='role'){if(u===cur)return toast('Tu ne peux pas changer ton propre rôle','⚠️');if(users[u].role==='admin'&&admins()<2)return toast('Dernier administrateur','⚠️');users[u].role=users[u].role==='admin'?'user':'admin';saveUsers();logEvent('admin',`${cur} a mis ${u} en ${users[u].role}`);draw()}
+  else if(a==='del'){if(u===cur)return toast('Impossible de supprimer ta propre session','⚠️');if(users[u].role==='admin'&&admins()<2)return toast('Dernier administrateur','⚠️');ask(`Supprimer ${u} et son dossier personnel ?`,'',()=>{delete users[u];if(fs.c.home.c[u])delete fs.c.home.c[u];saveUsers();logEvent('admin',`${cur} a supprimé ${u}`);toast(`Compte ${u} supprimé`,'🗑');draw()},'confirm')}
+  else if(a==='ref')draw();
+  else if(a==='clr')ask('Vider le journal ?','',()=>{fs.c.var.c.log.c['auth.log']=F();saveFS();logEvent('admin',`journal vidé par ${cur}`);draw()},'confirm');
+  else if(a==='svc'){const s=b.dataset.s;if(s==='weblinux-wm')return toast('Le bureau dépend de ce service','⚠️');SVC[s].on=!SVC[s].on;netIcon();logEvent('systemctl',`${cur} : ${SVC[s].on?'start':'stop'} ${s}`);draw()}
+  else if(a==='bk')downloadBackup();
+  else if(a==='rfs')ask('Réinitialiser tous les fichiers (les comptes sont conservés) ?','',()=>{fs=defaultFS();Object.keys(users).forEach(n=>ensureHome(n));syncSys();logEvent('admin',`${cur} a réinitialisé les fichiers`);toast('Fichiers réinitialisés','♻️');draw()},'confirm');
+  else if(a==='rall')ask('Effacer TOUT (comptes et fichiers) et redémarrer ?','',()=>{try{Object.keys(localStorage).filter(k=>k.startsWith('wl2')).forEach(k=>localStorage.removeItem(k));sessionStorage.clear()}catch(e){}location.reload()},'confirm')};
+ draw();return win('Administration','🛡️',body,{w:720,h:480});
 }
 
 /* ---------- Paramètres ---------- */
-const WPS=['linear-gradient(135deg,#77216f,#2c001e 55%,#e95420 140%)','linear-gradient(160deg,#0f2027,#203a43,#2c5364)','linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#134e5e,#71b280)','linear-gradient(135deg,#42275a,#734b6d)','radial-gradient(circle at 30% 20%,#3a1c71,#d76d77 60%,#ffaf7b)','linear-gradient(135deg,#000428,#004e92)','#1a1a1a'];
-function setWP(i){$('#desktop').style.background=WPS[i];$('#desktop').style.backgroundSize='cover';store.set('wlwp',i)}
 function openSettings(){
- const body=document.createElement('div');body.className='pad';
- body.innerHTML=`<h3 style="margin-top:0">Arrière-plan</h3><div class="wps">${WPS.map((w,i)=>`<div class="wp" data-i="${i}" style="background:${w}"></div>`).join('')}</div><h3>Système</h3><p><button class="rs">🗑 Réinitialiser les fichiers</button></p><p style="color:#999;margin-top:8px;font-size:12px">Les fichiers sont enregistrés dans le stockage local de ton navigateur.</p>`;
- const mark=()=>body.querySelectorAll('.wp').forEach(e=>e.classList.toggle('on',e.dataset.i==(store.get('wlwp')||0)));
- body.onclick=e=>{const w=e.target.closest('.wp');if(w){setWP(+w.dataset.i);mark()}if(e.target.closest('.rs')){fs=defaultFS();saveFS();e.target.textContent='✅ Réinitialisé'}};
- mark();return win('Paramètres','⚙️',body,{w:520,h:400});
+ let tab=0;const body=document.createElement('div');body.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
+ body.innerHTML=`<div class="tabs"></div><div class="pad" style="flex:1"></div>`;
+ const tb=$('.tabs',body),pad=$('.pad',body);
+ function draw(){tb.innerHTML=['🎨 Apparence','👤 Compte'].map((t,i)=>`<span class="tab${i===tab?' on':''}" data-t="${i}">${t}</span>`).join('');
+  if(tab===0)pad.innerHTML=`<h3>Thème</h3><div class="row"><button data-th="dark" class="${S.th==='dark'?'pri':''}">🌙 Sombre</button><button data-th="light" class="${S.th==='light'?'pri':''}">☀️ Clair</button></div><h3>Couleur d'accent</h3><div class="acs">${ACS.map(c=>`<i data-ac="${c}" class="${S.ac===c?'on':''}" style="background:${c}"></i>`).join('')}</div><h3>Arrière-plan</h3><div class="wps">${WPS.map((w,i)=>`<div class="wp ${S.wp===i?'on':''}" data-wp="${i}" style="background:${w}"></div>`).join('')}</div>`;
+  else pad.innerHTML=`<div class="row" style="gap:14px"><div class="av big">${esc(cur[0].toUpperCase())}</div><div><h3 style="margin:0">${esc(cur)}</h3><span class="badge ${isAdmin(cur)?'adm':''}">${isAdmin(cur)?'administrateur':'utilisateur'}</span><p style="color:var(--mut);margin-top:6px">Dossier : ${esc(pstr(homeP(cur)))}</p></div></div><h3>Changer le mot de passe</h3><div style="display:flex;flex-direction:column;gap:8px;max-width:320px"><input type="password" id="p0" placeholder="Mot de passe actuel"><input type="password" id="p1" placeholder="Nouveau mot de passe (4 min.)"><input type="password" id="p2" placeholder="Confirmer"><button class="pri" data-a="chg">Mettre à jour</button></div>`}
+ body.onclick=async e=>{const t=e.target.closest('.tab');if(t){tab=+t.dataset.t;draw();return}const d=e.target.dataset;
+  if(d.th){S.th=d.th;applyS();saveS();draw()}else if(d.ac){S.ac=d.ac;applyS();saveS();draw()}else if(d.wp!=null){S.wp=+d.wp;applyS();saveS();draw()}
+  else if(d.a==='chg'){const o=$('#p0',pad).value,p1=$('#p1',pad).value,p2=$('#p2',pad).value;
+   if(!(await checkPw(cur,o)))return toast('Mot de passe actuel incorrect','⚠️');if(p1.length<4)return toast('4 caractères minimum','⚠️');if(p1!==p2)return toast('Les mots de passe ne correspondent pas','⚠️');
+   await setPw(cur,p1);logEvent('passwd',`${cur} a changé son mot de passe`);toast('Mot de passe mis à jour','✅');draw()}};
+ draw();return win('Paramètres','⚙️',body,{w:540,h:460});
 }
 
 /* ---------- À propos ---------- */
 function openAbout(){
  const body=document.createElement('div');body.className='pad';
- body.innerHTML=`<pre style="font:13px/1.2 var(--mono);color:#fce94f">    .--.
+ body.innerHTML=`<pre style="font:13px/1.2 var(--mono);color:#e5a50a">    .--.
    |o_o |
    |:_/ |
   //   \\ \\
  (|     | )
 /'\\_   _/\`\\
-\\___)=(___/</pre><h3>WebLinux 1.0</h3><p>Un mini système d'exploitation style Linux, écrit en HTML, CSS et JavaScript. Il tourne dans un seul fichier, sans serveur.</p><p style="margin-top:10px;color:#aaa">Ouvre le Terminal et tape <code>help</code> pour commencer.</p>`;
- return win('À propos','🐧',body,{w:440,h:380});
+\\___)=(___/</pre><h3>WebLinux 2.0</h3><p>Un mini système d'exploitation style Linux, en HTML, CSS et JavaScript, avec comptes, droits et administration.</p><p style="margin-top:10px;color:var(--mut)">Session : <b>${esc(cur)}</b> (${isAdmin(cur)?'administrateur':'utilisateur'}). Ouvre le Terminal et tape <code>help</code>.</p>`;
+ return win('À propos','🐧',body,{w:460,h:400});
 }
 
 /* ---------- Terminal ---------- */
-const CMDS='help ls cd pwd cat echo mkdir touch rm cp mv tree clear date whoami hostname uname neofetch uptime history ps top cowsay fortune grep wc head tail sort apt sudo man open nano vim edit df free id ping reboot shutdown exit'.split(' ');
+const CMDS='help ls ll cd pwd cat echo mkdir touch rm cp mv tree clear date whoami hostname uname neofetch uptime history ps top cowsay fortune grep wc head tail sort apt sudo su man open nano vim edit df free id ping reboot shutdown exit useradd userdel passwd usermod users who groups last journalctl systemctl kill killall wall backup lock logout'.split(' ');
 function openTerminal(){
- const cwd=['home','user'],hist=[];let hi=0;
+ let eu=cur,cwd=[...homeP(cur)],stack=[],hist=[],hi=0,sudoUntil=0,passRes=null,busy=false;
  const term=document.createElement('div');term.className='term';
  const out=document.createElement('div');term.appendChild(out);
  const pl=document.createElement('div');pl.className='pl';const pr=document.createElement('span'),inp=document.createElement('input');
  inp.spellcheck=false;inp.autocomplete='off';pl.append(pr,inp);term.appendChild(pl);
- const W=win('user@weblinux','🖥️',term,{w:700,h:440});
- const promptHTML=()=>`<span class="g">user@weblinux</span>:<span class="b">${esc(short(cwd))}</span>$ `;
- const setPrompt=()=>{pr.innerHTML=promptHTML();W.setTitle('user@weblinux: '+short(cwd))};
- const print=h=>{const p=document.createElement('pre');p.innerHTML=h;out.appendChild(p)};
+ const W=win(`${cur}@weblinux`,'🖥️',term,{w:720,h:450});
+ const hp=()=>homeP(eu),nm=p=>norm(p,cwd,hp()),ok=(p,w)=>canDo(eu,p,w);
+ const short=parts=>{const s=pstr(parts),h=pstr(hp());return s===h?'~':s.startsWith(h+'/')?'~'+s.slice(h.length):s};
+ const promptHTML=()=>`<span class="g">${esc(eu)}@weblinux</span>:<span class="b">${esc(short(cwd))}</span>${eu==='root'?'#':'$'} `;
+ const setPrompt=()=>{pr.innerHTML=promptHTML();W.setTitle(`${eu}@weblinux: ${short(cwd)}`)};
+ const print=h=>{const p=document.createElement('pre');p.innerHTML=h;out.appendChild(p);scroll()};
  const scroll=()=>term.scrollTop=term.scrollHeight;
  const split=s=>{const r=[],re=/"([^"]*)"|'([^']*)'|(\S+)/g;let m;while(m=re.exec(s))r.push(m[1]??m[2]??m[3]);return r};
- const expand=s=>s.replace(/\$USER\b/g,'user').replace(/\$HOME\b/g,'/home/user').replace(/\$PWD\b/g,pstr(cwd)).replace(/\$HOSTNAME\b/g,'weblinux');
+ const expand=s=>s.replace(/\$USER\b/g,eu).replace(/\$HOME\b/g,pstr(hp())).replace(/\$PWD\b/g,pstr(cwd)).replace(/\$HOSTNAME\b/g,'weblinux');
  const err=m=>`<span class="r">${esc(m)}</span>`;
  const lines=t=>t.replace(/\n$/,'').split('\n');
- const fmtSize=n=>String(n).padStart(6);
+ const readPass=lab=>new Promise(res=>{print(esc(lab));inp.type='password';pr.innerHTML='';passRes=v=>{inp.type='text';setPrompt();res(v)};inp.focus()});
+ const need=(x,c)=>{if(eu==='root')return true;x.o(err(`${c} : Permission non accordée (essaie avec sudo)`));return false};
+ const readF=(f,c)=>{const p=nm(f),n=get(p);if(!n)return{e:`${c} : ${f} : Aucun fichier ou dossier de ce type`};if(n.t==='d')return{e:`${c} : ${f} : est un dossier`};if(!ok(p,false))return{e:`${c} : ${f} : Permission non accordée`};return{s:n.s}};
+ const authLines=()=>((fs.c.var.c.log.c['auth.log']||F()).s).split('\n').filter(Boolean);
 
  const C={
   help(a,x){x.o(`<span class="y">Commandes disponibles :</span>\n`+
    ` <span class="c">ls cd pwd cat echo mkdir touch rm cp mv tree</span>   fichiers et dossiers\n`+
    ` <span class="c">grep wc head tail sort</span>                        filtres (avec | )\n`+
    ` <span class="c">neofetch uname date uptime whoami hostname id df free ps top</span>  système\n`+
-   ` <span class="c">nano vim edit open</span>                            ouvrir un fichier dans l'éditeur\n`+
-   ` <span class="c">cowsay fortune history clear apt sudo ping man</span>\n`+
-   ` <span class="c">reboot shutdown exit</span>\n\n`+
-   `Astuces : Tab = autocomplétion, ↑/↓ = historique, <b>></b> et <b>>></b> = rediriger vers un fichier, <b>|</b> = pipe.`)},
+   ` <span class="c">nano vim edit open</span>  éditeur  ·  <span class="c">cowsay fortune history clear apt ping man</span>\n\n`+
+   `<span class="y">Comptes et administration :</span>\n`+
+   ` <span class="c">sudo CMD</span> / <span class="c">sudo -i</span>   exécuter en root (administrateurs, mot de passe demandé)\n`+
+   ` <span class="c">su [user]</span>             changer d'utilisateur  ·  <span class="c">exit</span> pour revenir\n`+
+   ` <span class="c">useradd [-a] nom</span>      créer un compte (-a = administrateur)\n`+
+   ` <span class="c">userdel [-r] nom</span>      supprimer un compte (-r = avec son dossier)\n`+
+   ` <span class="c">passwd [nom]</span>          changer un mot de passe\n`+
+   ` <span class="c">usermod -a|-u nom</span>     promouvoir / rétrograder\n`+
+   ` <span class="c">users who groups last</span> comptes et connexions\n`+
+   ` <span class="c">journalctl [-n N]</span>     journal d'authentification (root)\n`+
+   ` <span class="c">systemctl status|start|stop|restart SERVICE</span>\n`+
+   ` <span class="c">kill PID</span> / <span class="c">killall NOM</span>  ·  <span class="c">wall MSG</span> (annonce)  ·  <span class="c">backup</span> (root)\n`+
+   ` <span class="c">lock logout reboot shutdown exit</span>\n\n`+
+   `Astuces : Tab = autocomplétion, ↑/↓ = historique, <b>></b> <b>>></b> = redirection, <b>|</b> = pipe.`)},
   ls(a,x){const fl=a.filter(s=>s[0]==='-').join(''),args=a.filter(s=>s[0]!=='-'),all=fl.includes('a'),long=fl.includes('l');
    const list=(p,label)=>{const n=get(p);if(!n)return x.o(err(`ls : impossible d'accéder à '${label}' : Aucun fichier ou dossier de ce type`));
+    if(!ok(p,false))return x.o(err(`ls : impossible d'ouvrir le dossier '${label}' : Permission non accordée`));
     if(n.t==='f')return x.o(esc(label));
     let names=sortNames(n);if(!all)names=names.filter(k=>k[0]!=='.');
-    if(long){x.o(`total ${names.length}`);names.forEach(k=>{const e=n.c[k],d=e.t==='d';x.o(`${d?'drwxr-xr-x':'-rw-r--r--'} user user ${fmtSize(d?4096:e.s.length)} ${new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})} ${d?`<span class="b">${esc(k)}</span>`:esc(k)}`)})}
+    if(long){x.o(`total ${names.length}`);names.forEach(k=>{const e=n.c[k],d=e.t==='d',o=owner([...p,k]);x.o(`${d?'drwxr-xr-x':'-rw-r--r--'} ${o} ${o} ${String(d?4096:e.s.length).padStart(6)} ${new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})} ${d?`<span class="b">${esc(k)}</span>`:esc(k)}`)})}
     else x.o(names.map(k=>n.c[k].t==='d'?`<span class="b">${esc(k)}</span>`:esc(k)).join('  '))};
-   if(!args.length)list(cwd,'.');else args.forEach(p=>{if(args.length>1)x.o(esc(p)+':');list(norm(p,cwd),p)})},
-  cd(a,x){const p=a[0]?norm(a[0],cwd):['home','user'],n=get(p);if(!n)return x.o(err(`cd : ${a[0]} : Aucun fichier ou dossier de ce type`));
-   if(n.t!=='d')return x.o(err(`cd : ${a[0]} : N'est pas un dossier`));cwd.splice(0,cwd.length,...p)},
+   if(!args.length)list(cwd,'.');else args.forEach(p=>{if(args.length>1)x.o(esc(p)+':');list(nm(p),p)})},
+  cd(a,x){const p=a[0]?nm(a[0]):[...hp()],n=get(p);if(!n)return x.o(err(`cd : ${a[0]} : Aucun fichier ou dossier de ce type`));
+   if(n.t!=='d')return x.o(err(`cd : ${a[0]} : N'est pas un dossier`));if(!ok(p,false))return x.o(err(`cd : ${a[0]} : Permission non accordée`));cwd=p},
   pwd(a,x){x.o(esc(pstr(cwd)))},
-  cat(a,x){if(!a.length&&x.in!=null)return x.o(esc(x.in));a.forEach(f=>{const n=get(norm(f,cwd));if(!n)x.o(err(`cat : ${f} : Aucun fichier ou dossier de ce type`));else if(n.t==='d')x.o(err(`cat : ${f} : est un dossier`));else x.o(esc(n.s.replace(/\n$/,'')))})},
+  cat(a,x){if(!a.length&&x.in!=null)return x.o(esc(x.in));a.forEach(f=>{const r=readF(f,'cat');x.o(r.e?err(r.e):esc(r.s.replace(/\n$/,'')))})},
   echo(a,x){x.o(esc(a.join(' ')))},
-  mkdir(a,x){a.filter(s=>s[0]!=='-').forEach(f=>{const p=norm(f,cwd),par=get(p.slice(0,-1)),nm=p[p.length-1];
-   if(!par||par.t!=='d')x.o(err(`mkdir : impossible de créer le dossier '${f}' : Aucun fichier ou dossier de ce type`));else if(par.c[nm])x.o(err(`mkdir : impossible de créer le dossier '${f}' : Le fichier existe`));else par.c[nm]=D()});saveFS()},
-  touch(a,x){a.forEach(f=>{const p=norm(f,cwd),par=get(p.slice(0,-1)),nm=p[p.length-1];if(!par||par.t!=='d')x.o(err(`touch : impossible de faire un touch '${f}'`));else if(!par.c[nm])par.c[nm]=F()});saveFS()},
-  rm(a,x){const rec=a.some(s=>/^-.*[rR]/.test(s));a.filter(s=>s[0]!=='-').forEach(f=>{const p=norm(f,cwd),par=get(p.slice(0,-1)),nm=p[p.length-1],n=get(p);
-   if(!n)x.o(err(`rm : impossible de supprimer '${f}' : Aucun fichier ou dossier de ce type`));else if(n.t==='d'&&!rec)x.o(err(`rm : impossible de supprimer '${f}' : c'est un dossier (utilise -r)`));
-   else if(!p.length||(p.length<=cwd.length&&p.every((s,i)=>s===cwd[i])&&n.t==='d'))x.o(err(`rm : opération refusée sur '${f}'`));else delete par.c[nm]});saveFS()},
+  mkdir(a,x){a.filter(s=>s[0]!=='-').forEach(f=>{const p=nm(f),par=get(p.slice(0,-1)),n=p[p.length-1];
+   if(!par||par.t!=='d')x.o(err(`mkdir : impossible de créer '${f}' : Aucun fichier ou dossier de ce type`));else if(!ok(p,true))x.o(err(`mkdir : impossible de créer '${f}' : Permission non accordée`));else if(par.c[n])x.o(err(`mkdir : impossible de créer '${f}' : Le fichier existe`));else par.c[n]=D()});saveFS()},
+  touch(a,x){a.forEach(f=>{const p=nm(f),par=get(p.slice(0,-1)),n=p[p.length-1];if(!par||par.t!=='d')x.o(err(`touch : '${f}' : chemin invalide`));else if(!ok(p,true))x.o(err(`touch : '${f}' : Permission non accordée`));else if(!par.c[n])par.c[n]=F()});saveFS()},
+  rm(a,x){const rec=a.some(s=>/^-.*[rR]/.test(s));a.filter(s=>s[0]!=='-').forEach(f=>{const p=nm(f),par=get(p.slice(0,-1)),n=p[p.length-1],nd=get(p);
+   if(!p.length)return x.o(`<span class="r">Bien essayé 😏 (et cet incident sera signalé)</span>`);
+   if(!nd)x.o(err(`rm : impossible de supprimer '${f}' : Aucun fichier ou dossier de ce type`));else if(!ok(p,true))x.o(err(`rm : impossible de supprimer '${f}' : Permission non accordée`));
+   else if(nd.t==='d'&&!rec)x.o(err(`rm : impossible de supprimer '${f}' : c'est un dossier (utilise -r)`));
+   else if(nd.t==='d'&&cwd.length>=p.length&&p.every((s,i)=>s===cwd[i]))x.o(err(`rm : opération refusée sur '${f}' (dossier courant)`));
+   else if(p.length<=2&&p[0]==='home'||p.length===1)x.o(err(`rm : opération refusée sur '${f}' (dossier système)`));else delete par.c[n]});saveFS()},
   cp(a,x){C._cp(a,x,false)},mv(a,x){C._cp(a,x,true)},
-  _cp(a,x,mv){const args=a.filter(s=>s[0]!=='-');if(args.length<2)return x.o(err('opérande manquant'));
-   const sp=norm(args[0],cwd),src=get(sp);if(!src||!sp.length)return x.o(err(`impossible de trouver '${args[0]}'`));
-   let dp=norm(args[1],cwd),dn=get(dp);if(dn&&dn.t==='d')dp=[...dp,sp[sp.length-1]];
-   const par=get(dp.slice(0,-1));if(!par||par.t!=='d')return x.o(err(`impossible de créer '${args[1]}'`));
+  _cp(a,x,mv){const args=a.filter(s=>s[0]!=='-'),c=mv?'mv':'cp';if(args.length<2)return x.o(err(`${c} : opérande manquant`));
+   const sp=nm(args[0]),src=get(sp);if(!src||!sp.length)return x.o(err(`${c} : impossible de trouver '${args[0]}'`));
+   let dp=nm(args[1]);const dn=get(dp);if(dn&&dn.t==='d')dp=[...dp,sp[sp.length-1]];
+   const par=get(dp.slice(0,-1));if(!par||par.t!=='d')return x.o(err(`${c} : impossible de créer '${args[1]}'`));
+   if(!ok(sp,false)||!ok(dp,true)||(mv&&!ok(sp,true)))return x.o(err(`${c} : Permission non accordée`));
    par.c[dp[dp.length-1]]=JSON.parse(JSON.stringify(src));if(mv)delete get(sp.slice(0,-1)).c[sp[sp.length-1]];saveFS()},
-  tree(a,x){const start=a[0]?norm(a[0],cwd):cwd,n=get(start);if(!n||n.t!=='d')return x.o(err('tree : dossier introuvable'));
+  tree(a,x){const start=a[0]?nm(a[0]):cwd,n=get(start);if(!n||n.t!=='d')return x.o(err('tree : dossier introuvable'));if(!ok(start,false))return x.o(err('tree : Permission non accordée'));
    let d=0,f=0;x.o(`<span class="b">${esc(a[0]||'.')}</span>`);
-   const walk=(n,pre)=>{const ks=sortNames(n).filter(k=>k[0]!=='.');ks.forEach((k,i)=>{const last=i===ks.length-1,e=n.c[k];x.o(pre+(last?'└── ':'├── ')+(e.t==='d'?`<span class="b">${esc(k)}</span>`:esc(k)));if(e.t==='d'){d++;walk(e,pre+(last?'    ':'│   '))}else f++})};
-   walk(n,'');x.o(`\n${d} dossiers, ${f} fichiers`)},
+   const walk=(n,pre,p)=>{const ks=sortNames(n).filter(k=>k[0]!=='.'&&ok([...p,k],false));ks.forEach((k,i)=>{const last=i===ks.length-1,e=n.c[k];x.o(pre+(last?'└── ':'├── ')+(e.t==='d'?`<span class="b">${esc(k)}</span>`:esc(k)));if(e.t==='d'){d++;walk(e,pre+(last?'    ':'│   '),[...p,k])}else f++})};
+   walk(n,'',start);x.o(`\n${d} dossiers, ${f} fichiers`)},
   clear(){out.innerHTML=''},
   date(a,x){x.o(esc(new Date().toLocaleString('fr-FR',{dateStyle:'full',timeStyle:'medium'})))},
-  whoami(a,x){x.o('user')},hostname(a,x){x.o('weblinux')},id(a,x){x.o('uid=1000(user) gid=1000(user) groupes=1000(user),27(sudo)')},
+  whoami(a,x){x.o(esc(eu))},hostname(a,x){x.o('weblinux')},
+  id(a,x){const t=a[0]||eu;if(t!=='root'&&!users[t])return x.o(err(`id : '${t}' : utilisateur inexistant`));x.o(t==='root'?'uid=0(root) gid=0(root) groupes=0(root)':`uid=1000(${esc(t)}) gid=1000(${esc(t)}) groupes=1000(${esc(t)})${isAdmin(t)?',27(sudo)':''}`)},
+  groups(a,x){const t=a[0]||eu;if(t!=='root'&&!users[t])return x.o(err(`groups : '${t}' : utilisateur inexistant`));x.o(`${esc(t)} : ${t==='root'?'root':esc(t)+(isAdmin(t)?' sudo':'')}`)},
   uname(a,x){x.o(a.includes('-a')?'Linux weblinux 6.8.0-web #1 SMP PREEMPT x86_64 GNU/Linux':'Linux')},
-  uptime(a,x){const s=Math.floor((Date.now()-bootTime)/1000);x.o(` ${new Date().toLocaleTimeString('fr-FR')} up ${Math.floor(s/60)} min, 1 utilisateur, charge moyenne : 0,${(10+Math.random()*30|0)}`)},
+  uptime(a,x){const s=Math.floor((Date.now()-bootTime)/1000);x.o(` ${new Date().toLocaleTimeString('fr-FR')} up ${Math.floor(s/60)} min, ${Object.keys(users).length} comptes, charge moyenne : 0,${(10+Math.random()*30|0)}`)},
   history(a,x){hist.forEach((h,i)=>x.o(String(i+1).padStart(4)+'  '+esc(h)))},
-  ps(a,x){x.o('  PID TTY          TIME CMD');x.o('    1 ?        00:00:01 systemd');x.o('   88 ?        00:00:03 weblinux-wm');x.o(' 1000 pts/0    00:00:00 bash');wins.forEach((w,i)=>x.o(String(1001+i).padStart(5)+' ?        00:00:00 '+esc(w.title.split(':')[0])))},
-  top(a,x){x.o(`<b>top - ${new Date().toLocaleTimeString('fr-FR')} up ${Math.floor((Date.now()-bootTime)/60000)} min,  1 user</b>`);x.o(`%Cpu(s): <span class="g">${(Math.random()*12).toFixed(1)}</span> us,  0,3 sy,  ${(88-Math.random()*5).toFixed(1)} id`);C.ps(a,x)},
+  ps(a,x){x.o('  PID TTY          TIME CMD');x.o('    1 ?        00:00:01 systemd');x.o('   88 ?        00:00:03 weblinux-wm');wins.forEach(w=>x.o(String(w.pid).padStart(5)+' ?        00:00:00 '+esc(w.title.split(':')[0])))},
+  top(a,x){x.o(`<b>top - ${new Date().toLocaleTimeString('fr-FR')} up ${Math.floor((Date.now()-bootTime)/60000)} min</b>`);x.o(`%Cpu(s): <span class="g">${(Math.random()*12).toFixed(1)}</span> us,  0,3 sy,  ${(88-Math.random()*5).toFixed(1)} id`);C.ps(a,x)},
   neofetch(a,x){const up=Math.floor((Date.now()-bootTime)/60000),L=['<span class="y">    .--.   </span>','<span class="y">   |o_o |  </span>','<span class="y">   |:_/ |  </span>','<span class="y">  //   \\ \\ </span>','<span class="y"> (|     | )</span>','<span class="y">/\'\\_   _/`\\</span>','<span class="y">\\___)=(___/</span>'];
-   const I=[`<span class="g">user</span>@<span class="g">weblinux</span>`,'-----------------',`<span class="g">OS</span>: WebLinux 1.0 x86_64`,`<span class="g">Noyau</span>: 6.8.0-web`,`<span class="g">Uptime</span>: ${up} min`,`<span class="g">Shell</span>: bash 5.2`,`<span class="g">Résolution</span>: ${innerWidth}x${innerHeight}`,`<span class="g">CPU</span>: ${navigator.hardwareConcurrency||'?'} cœurs`,`<span class="g">Terminal</span>: weblinux-term`];
+   const I=[`<span class="g">${esc(eu)}</span>@<span class="g">weblinux</span>`,'-----------------',`<span class="g">OS</span>: WebLinux 2.0 x86_64`,`<span class="g">Noyau</span>: 6.8.0-web`,`<span class="g">Uptime</span>: ${up} min`,`<span class="g">Shell</span>: bash 5.2`,`<span class="g">Rôle</span>: ${eu==='root'?'root':isAdmin(eu)?'administrateur':'utilisateur'}`,`<span class="g">Résolution</span>: ${innerWidth}x${innerHeight}`,`<span class="g">CPU</span>: ${navigator.hardwareConcurrency||'?'} cœurs`];
    for(let i=0;i<Math.max(L.length,I.length);i++)x.o((L[i]||'             ')+'  '+(I[i]||''))},
   cowsay(a,x){const t=a.join(' ')||'Meuh !',b='-'.repeat(t.length+2);x.o(` _${b}_\n< ${esc(t)} >\n -${b}-\n        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\       )\\/\\\n                ||----w |\n                ||     ||`)},
-  fortune(a,x){const f=['Il n\'y a pas de nuage, juste l\'ordinateur de quelqu\'un d\'autre.','sudo make me a sandwich.','Il y a 10 types de personnes : celles qui comprennent le binaire et les autres.','Ça marche sur ma machine.','rm -rf n\'est pas une stratégie de sauvegarde.'];x.o(f[Math.random()*f.length|0])},
+  fortune(a,x){const f=[`Il n'y a pas de nuage, juste l'ordinateur de quelqu'un d'autre.`,'sudo make me a sandwich.','Il y a 10 types de personnes : celles qui comprennent le binaire et les autres.','Ça marche sur ma machine.',`rm -rf n'est pas une stratégie de sauvegarde.`];x.o(f[Math.random()*f.length|0])},
   grep(a,x){const args=a.filter(s=>s[0]!=='-'),ic=a.some(s=>/^-.*i/.test(s)),pat=args[0];if(!pat)return x.o(err('Usage : grep MOTIF [FICHIER]'));
    let re;try{re=new RegExp(pat,ic?'i':'')}catch(e){return x.o(err('motif invalide'))}
-   let src=x.in;if(args[1]){const n=get(norm(args[1],cwd));if(!n||n.t!=='f')return x.o(err(`grep : ${args[1]} : introuvable`));src=n.s}
+   let src=x.in;if(args[1]){const r=readF(args[1],'grep');if(r.e)return x.o(err(r.e));src=r.s}
    if(src==null)return;lines(src).filter(l=>re.test(l)).forEach(l=>x.o(esc(l)))},
-  wc(a,x){let s=x.in;if(a[0]){const n=get(norm(a[0],cwd));if(!n||n.t!=='f')return x.o(err('wc : fichier introuvable'));s=n.s}if(s==null)return;
-   x.o(`${s?s.replace(/\n$/,'').split('\n').length:0} ${s.trim()?s.trim().split(/\s+/).length:0} ${s.length}`)},
+  wc(a,x){let s=x.in;if(a[0]){const r=readF(a[0],'wc');if(r.e)return x.o(err(r.e));s=r.s}if(s==null)return;x.o(`${s?s.replace(/\n$/,'').split('\n').length:0} ${s.trim()?s.trim().split(/\s+/).length:0} ${s.length}`)},
   head(a,x){C._ht(a,x,true)},tail(a,x){C._ht(a,x,false)},
   _ht(a,x,h){let n=10,f=null;for(let i=0;i<a.length;i++){if(a[i]==='-n')n=+a[++i]||10;else if(/^-\d+$/.test(a[i]))n=+a[i].slice(1);else f=a[i]}
-   let s=x.in;if(f){const nd=get(norm(f,cwd));if(!nd||nd.t!=='f')return x.o(err('fichier introuvable'));s=nd.s}if(s==null)return;
-   const l=lines(s);(h?l.slice(0,n):l.slice(-n)).forEach(z=>x.o(esc(z)))},
-  sort(a,x){let s=x.in;if(a[0]){const n=get(norm(a[0],cwd));if(!n||n.t!=='f')return x.o(err('fichier introuvable'));s=n.s}if(s==null)return;
-   const l=lines(s).sort((p,q)=>p.localeCompare(q,'fr'));(a.includes('-r')?l.reverse():l).forEach(z=>x.o(esc(z)))},
+   let s=x.in;if(f){const r=readF(f,h?'head':'tail');if(r.e)return x.o(err(r.e));s=r.s}if(s==null)return;const l=lines(s);(h?l.slice(0,n):l.slice(-n)).forEach(z=>x.o(esc(z)))},
+  sort(a,x){let s=x.in;if(a[0]&&a[0][0]!=='-'){const r=readF(a[0],'sort');if(r.e)return x.o(err(r.e));s=r.s}if(s==null)return;const l=lines(s).sort((p,q)=>p.localeCompare(q,'fr'));(a.includes('-r')?l.reverse():l).forEach(z=>x.o(esc(z)))},
   df(a,x){x.o('Sys. fich.   Taille Utilisé Dispo Uti% Monté sur');x.o('/dev/vda1       20G    7,2G  12G  38% /');x.o('tmpfs           2,0G      0  2,0G   0% /tmp')},
   free(a,x){x.o('               total   utilisé    libre');x.o('Mem:           2,0Gi     612Mi    1,1Gi');x.o('Swap:          1,0Gi        0B    1,0Gi')},
-  ping(a,x){const h=esc(a[0]||'localhost');x.o(`PING ${h} (127.0.0.1) 56(84) octets de données.`);for(let i=0;i<3;i++)x.o(`64 octets de ${h} : icmp_seq=${i+1} ttl=64 temps=${(0.03+Math.random()*.05).toFixed(3)} ms`);x.o(`--- ${h} statistiques ping ---\n3 paquets transmis, 3 reçus, 0% de perte`)},
-  apt(a,x){const sub=a[0],pk=a.slice(1).filter(s=>s[0]!=='-');if(sub==='update')return x.o('Atteint:1 http://deb.weblinux.local stable InRelease\nLecture des listes de paquets... Fait');
-   if(sub==='install'&&pk.length)return x.o(`Lecture des listes de paquets... Fait\nLes NOUVEAUX paquets suivants seront installés :\n  ${esc(pk.join(' '))}\n<span class="g">Paramétrage de ${esc(pk[0])} (1.0-1) ...</span>\n(c'est une simulation, rien n'est vraiment installé 😉)`);
-   x.o('Usage : apt update | apt install PAQUET')},
-  sudo(a,x){if(a.join(' ').includes('rm -rf /'))return x.o('<span class="r">Bien essayé 😏  Cet incident sera signalé.</span>');if(a[0]==='apt')return C.apt(a.slice(1),x);if(!a.length)return x.o('usage : sudo COMMANDE');x.o(`<span class="d">[sudo] mot de passe de user :</span>\nuser n'est pas dans le fichier sudoers. Cet incident sera signalé.`)},
+  ping(a,x){if(!SVC.network.on)return x.o(err('ping : Réseau inaccessible (service network arrêté)'));const h=esc(a[0]||'localhost');x.o(`PING ${h} (127.0.0.1) 56(84) octets de données.`);for(let i=0;i<3;i++)x.o(`64 octets de ${h} : icmp_seq=${i+1} ttl=64 temps=${(0.03+Math.random()*.05).toFixed(3)} ms`);x.o(`--- ${h} statistiques ping ---\n3 paquets transmis, 3 reçus, 0% de perte`)},
+  apt(a,x){const sub=a[0],pk=a.slice(1).filter(s=>s[0]!=='-');if(!need(x,'apt'))return;if(sub==='update')return x.o('Atteint:1 http://deb.weblinux.local stable InRelease\nLecture des listes de paquets... Fait');
+   if(sub==='install'&&pk.length)return x.o(`Lecture des listes de paquets... Fait\nLes NOUVEAUX paquets suivants seront installés :\n  ${esc(pk.join(' '))}\n<span class="g">Paramétrage de ${esc(pk[0])} (1.0-1) ...</span>\n(simulation : rien n'est vraiment installé 😉)`);x.o('Usage : sudo apt update | sudo apt install PAQUET')},
   man(a,x){x.o(a[0]?`Pas de page de manuel pour ${esc(a[0])}. Essaie <span class="c">help</span> 🙂`:'Quelle page de manuel voulez-vous ?')},
-  open(a,x){const p=a[0]?norm(a[0],cwd):cwd;if(!get(p))return x.o(err(`${a[0]} : introuvable`));openPath(p)},
-  nano(a,x){if(!a[0])return x.o('Usage : nano FICHIER');openEditor(pstr(norm(a[0],cwd)))},
-  reboot(a,x){x.o('Redémarrage...');setTimeout(boot,500)},
-  shutdown(a,x){x.o('Extinction...');setTimeout(poweroff,500)},
-  exit(a,x){W.close()}
- };
- C.vim=C.edit=C.nano;C.ll=(a,x)=>C.ls(['-l',...a],x);C.poweroff=C.shutdown;
+  open(a,x){const p=a[0]?nm(a[0]):cwd;if(!get(p))return x.o(err(`${a[0]} : introuvable`));if(!ok(p,false))return x.o(err('Permission non accordée'));const real=eu;if(real==='root'&&cur!=='root'){/* l'interface graphique utilise la session */}openPath(p)},
+  nano(a,x){if(!a[0])return x.o('Usage : nano FICHIER');const p=nm(a[0]);if(get(p)&&!ok(p,false))return x.o(err('Permission non accordée'));openEditor(pstr(p))},
 
- function exec(seg,input,last){
-  let buf=[],red=null;seg=seg.trim();
+  /* --- administration --- */
+  async sudo(a,x){
+   if(!a.length)return x.o('usage : sudo [-i] COMMANDE');
+   if(eu!=='root'){
+    if(!isAdmin(eu)){logEvent('sudo',`${eu} : refusé (pas dans sudoers)`);return x.o(`${esc(eu)} n'est pas dans le fichier sudoers. Cet incident sera signalé.`)}
+    if(Date.now()>sudoUntil){for(let t=0;t<3;t++){const pw=await readPass(`[sudo] mot de passe de ${eu} : `);if(await checkPw(eu,pw)){sudoUntil=Date.now()+300000;break}
+      if(t===2){logEvent('sudo',`${eu} : 3 échecs de mot de passe`);return x.o(err('sudo : 3 tentatives de mot de passe incorrectes'))}print('Désolé, essayez de nouveau.')}}
+    logEvent('sudo',`${eu} : ${a.join(' ')}`);
+   }
+   if(a[0]==='-i'){stack.push({eu,cwd:[...cwd]});eu='root';cwd=['root'];return}
+   const old=eu;eu='root';try{await dispatch(a[0],a.slice(1),x)}finally{eu=old}},
+  async su(a,x){const t=(a[0]==='-'?a[1]:a[0])||'root';
+   if(t!=='root'&&!users[t])return x.o(err(`su : l'utilisateur ${t} n'existe pas`));
+   if(eu!=='root'){
+    if(t==='root'&&!isAdmin(eu))return x.o(err(`su : Échec d'authentification (réservé aux administrateurs)`));
+    const pw=await readPass(t==='root'?`Mot de passe (${eu}) : `:'Mot de passe : ');
+    if(!(await checkPw(t==='root'?eu:t,pw))){logEvent('su',`échec ${eu} -> ${t}`);return x.o(err(`su : Échec d'authentification`))}}
+   logEvent('su',`${eu} -> ${t}`);stack.push({eu,cwd:[...cwd]});eu=t;cwd=[...homeP(t)]},
+  async useradd(a,x){if(!need(x,'useradd'))return;const adm=a.includes('-a'),n=a.filter(s=>s[0]!=='-')[0];
+   if(!n)return x.o('usage : useradd [-a] NOM');if(!/^[a-z][a-z0-9_-]{1,15}$/.test(n))return x.o(err('useradd : nom invalide (a-z, 0-9, _ -, 2 à 16 caractères)'));
+   if(users[n]||n==='root')return x.o(err(`useradd : l'utilisateur '${n}' existe déjà`));
+   const p1=await readPass('Mot de passe du nouvel utilisateur : ');if(p1.length<4)return x.o(err('useradd : mot de passe trop court (4 minimum)'));
+   await mkUser(n,p1,adm?'admin':'user');logEvent('useradd',`${cur} a créé ${n} (${adm?'admin':'user'})`);x.o(`utilisateur '${esc(n)}' créé${adm?' (administrateur)':''}`)},
+  userdel(a,x){if(!need(x,'userdel'))return;const rm=a.includes('-r'),n=a.filter(s=>s[0]!=='-')[0];
+   if(!users[n])return x.o(err(`userdel : l'utilisateur '${n||''}' n'existe pas`));if(n===cur)return x.o(err('userdel : impossible de supprimer la session ouverte'));
+   if(users[n].role==='admin'&&Object.values(users).filter(u=>u.role==='admin').length<2)return x.o(err('userdel : dernier administrateur'));
+   delete users[n];if(rm)delete fs.c.home.c[n];saveUsers();logEvent('userdel',`${cur} a supprimé ${n}${rm?' (avec son dossier)':''}`);x.o(`utilisateur '${esc(n)}' supprimé`)},
+  async passwd(a,x){const t=a[0]||(eu==='root'?cur:eu);if(!users[t])return x.o(err(`passwd : utilisateur '${t}' inconnu`));
+   if(t!==eu&&eu!=='root')return x.o(err('passwd : Permission non accordée'));
+   if(eu!=='root'){const o=await readPass('Mot de passe actuel : ');if(!(await checkPw(t,o)))return x.o(err('passwd : Mot de passe incorrect'))}
+   const p1=await readPass('Nouveau mot de passe : ');if(p1.length<4)return x.o(err('passwd : 4 caractères minimum'));
+   const p2=await readPass('Confirmer : ');if(p1!==p2)return x.o(err('passwd : Les mots de passe ne correspondent pas'));
+   await setPw(t,p1);logEvent('passwd',`mot de passe de ${t} modifié par ${eu}`);x.o('passwd : mot de passe mis à jour')},
+  usermod(a,x){if(!need(x,'usermod'))return;const n=a.filter(s=>s[0]!=='-')[0],up=a.includes('-a'),down=a.includes('-u');
+   if(!users[n]||(!up&&!down))return x.o('usage : usermod -a|-u NOM  (-a = administrateur, -u = utilisateur)');
+   if(down&&users[n].role==='admin'&&Object.values(users).filter(u=>u.role==='admin').length<2)return x.o(err('usermod : dernier administrateur'));
+   users[n].role=up?'admin':'user';saveUsers();logEvent('usermod',`${cur} a mis ${n} en ${users[n].role}`);x.o(`${esc(n)} est maintenant ${up?'administrateur':'utilisateur'}`)},
+  users(a,x){x.o(Object.keys(users).map(n=>`${esc(n)}${isAdmin(n)?' <span class="y">(admin)</span>':''}${n===cur?' <span class="g">● connecté</span>':''}`).join('\n'))},
+  who(a,x){x.o(`${esc(cur)}   pts/0   ${new Date().toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'})}`)},
+  last(a,x){const l=authLines().filter(s=>/login: session ouverte/.test(s)).slice(-10).reverse();x.o(l.length?l.map(s=>{const m=s.match(/^(\S+ \S+) .*pour (\S+)/);return m?`${esc(m[2]).padEnd(12)}pts/0   ${m[1]}`:''}).join('\n'):'(aucune connexion enregistrée)')},
+  journalctl(a,x){if(!need(x,'journalctl'))return;const i=a.indexOf('-n'),n=i>=0?+a[i+1]||20:30,l=authLines().slice(-n);x.o(l.length?l.map(esc).join('\n'):'-- Pas d\'entrées --')},
+  async systemctl(a,x){const sub=a[0]||'list',n=a[1];
+   if(sub==='list'||sub==='list-units'){x.o('UNITÉ                 ÉTAT');for(const k in SVC)x.o(k.padEnd(22)+(SVC[k].on?'<span class="g">actif</span>  ':'<span class="r">inactif</span>')+' '+esc(SVC[k].d));return}
+   if(!n||!SVC[n])return x.o(err(`systemctl : unité '${n||''}' introuvable`));
+   if(sub==='status')return x.o(`● ${n} - ${esc(SVC[n].d)}\n   Actif : ${SVC[n].on?'<span class="g">actif (en cours d\'exécution)</span>':'<span class="r">inactif (arrêté)</span>'}`);
+   if(!need(x,'systemctl'))return;
+   if(sub==='stop'&&n==='weblinux-wm')return x.o(err(`systemctl : impossible d'arrêter weblinux-wm (le bureau en dépend)`));
+   if(sub==='stop')SVC[n].on=false;else if(sub==='start'||sub==='restart')SVC[n].on=true;else return x.o(err('systemctl : action inconnue (status, start, stop, restart)'));
+   logEvent('systemctl',`${cur} : ${sub} ${n}`);netIcon();x.o(`${n} : ${sub} effectué`)},
+  kill(a,x){const pid=+a.filter(s=>s[0]!=='-')[0];if(!pid)return x.o('usage : kill PID');const w=wins.find(w=>w.pid===pid);if(!w)return x.o(err(`kill : (${pid}) - Aucun processus de ce type`));x.o(`processus ${pid} terminé`);w.close()},
+  killall(a,x){const n=(a[0]||'').toLowerCase();if(!n)return x.o('usage : killall NOM');const l=wins.filter(w=>w.title.toLowerCase().includes(n)&&w!==W);if(!l.length)return x.o(err(`killall : aucun processus nommé '${a[0]}'`));l.forEach(w=>w.close());x.o(`${l.length} processus terminé(s)`)},
+  wall(a,x){if(!need(x,'wall'))return;if(!a.length)return x.o('usage : wall MESSAGE');toast(a.join(' '),'📢');logEvent('wall',`${cur} : ${a.join(' ')}`);x.o('Message diffusé.')},
+  backup(a,x){if(!need(x,'backup'))return;downloadBackup();x.o('Sauvegarde téléchargée (weblinux-backup.json).')},
+  lock(a,x){x.o('Verrouillage...');setTimeout(lockScreen,200)},
+  logout(a,x){x.o('Déconnexion...');setTimeout(logout,200)},
+  reboot(a,x){if(!need(x,'reboot'))return;logEvent('system',`redémarrage par ${cur}`);x.o('Redémarrage...');setTimeout(()=>boot(true),500)},
+  shutdown(a,x){if(!need(x,'shutdown'))return;logEvent('system',`extinction par ${cur}`);x.o('Extinction...');setTimeout(poweroff,500)},
+  exit(a,x){if(stack.length){const s=stack.pop();eu=s.eu;cwd=s.cwd;sudoUntil=0}else W.close()}
+ };
+ C.vim=C.edit=C.nano;C.poweroff=C.shutdown;C.adduser=C.useradd;C.deluser=C.userdel;C.logout=C.logout;
+ async function dispatch(name,a,x){if(name==='ll'){name='ls';a=['-l',...a]}const f=C[name];if(f&&name[0]!=='_')await f(a,x);else x.o(err(`bash : ${name} : commande introuvable (essaie 'help')`))}
+ async function exec(seg,input,last){
+  const buf=[];let red=null;seg=seg.trim();
   const m=seg.match(/^(.*?)\s*(>>|>)\s*(\S+)\s*$/);if(m&&last){seg=m[1];red={app:m[2]==='>>',f:m[3]}}
-  const a=split(expand(seg));if(!a.length)return '';
-  const name=a.shift(),x={in:input,o:h=>buf.push(h)};
-  if(C[name]&&name[0]!=='_')C[name](a,x);else x.o(err(`bash : ${name} : commande introuvable (essaie 'help')`));
-  if(red){const t=plain(buf.join('\n')),p=norm(red.f,cwd),par=get(p.slice(0,-1)),nm=p[p.length-1];
-   if(!par||par.t!=='d'||(par.c[nm]&&par.c[nm].t==='d'))print(err(`bash : ${red.f} : impossible d'écrire`));
-   else{par.c[nm]=F((red.app&&par.c[nm]?par.c[nm].s:'')+t+'\n');saveFS()}return ''}
+  const a=split(expand(seg));if(!a.length)return '';const name=a.shift(),x={in:input,o:h=>buf.push(h)};
+  await dispatch(name,a,x);
+  if(red){const t=plain(buf.join('\n')),p=nm(red.f),par=get(p.slice(0,-1)),n=p[p.length-1];
+   if(!par||par.t!=='d'||(par.c[n]&&par.c[n].t==='d'))print(err(`bash : ${red.f} : impossible d'écrire`));
+   else if(!ok(p,true))print(err(`bash : ${red.f} : Permission non accordée`));
+   else{par.c[n]=F((red.app&&par.c[n]?par.c[n].s:'')+t+'\n');saveFS()}return ''}
   return buf.join('\n');
  }
- function run(line){
-  print(promptHTML()+esc(line));if(!line.trim())return;
-  hist.push(line);hi=hist.length;
-  const segs=line.split('|');let input=null,res='';
-  segs.forEach((s,i)=>{res=exec(s,input,i===segs.length-1);input=plain(res)});
-  if(res)print(res);setPrompt();
+ async function run(line){
+  print(promptHTML()+esc(line));if(!line.trim())return;hist.push(line);hi=hist.length;busy=true;
+  try{for(const part of line.split(/\s*(?:&&|;)\s*/)){if(!part.trim())continue;const segs=part.split('|');let input=null,res='';for(let i=0;i<segs.length;i++){res=await exec(segs[i],input,i===segs.length-1);input=plain(res)}if(res)print(res)}}catch(e){print(err('Erreur : '+e.message))}
+  busy=false;if(document.body.contains(term))setPrompt();scroll();
  }
  function complete(){
   const v=inp.value,parts=v.split(' '),w=parts[parts.length-1];let cands=[];
   if(parts.length===1)cands=CMDS.filter(c=>c.startsWith(w));
-  else{const i=w.lastIndexOf('/'),dir=i>=0?w.slice(0,i+1):'',base=w.slice(i+1),n=get(norm(dir||'.',cwd));
-   if(n&&n.t==='d')cands=Object.keys(n.c).filter(k=>k.startsWith(base)).map(k=>dir+k+(n.c[k].t==='d'?'/':''))}
+  else{const i=w.lastIndexOf('/'),dir=i>=0?w.slice(0,i+1):'',base=w.slice(i+1),p=nm(dir||'.'),n=get(p);
+   if(n&&n.t==='d'&&ok(p,false))cands=Object.keys(n.c).filter(k=>k.startsWith(base)).map(k=>dir+k+(n.c[k].t==='d'?'/':''))}
   if(cands.length===1){parts[parts.length-1]=cands[0];inp.value=parts.join(' ')+(cands[0].endsWith('/')?'':' ')}
   else if(cands.length>1){print(promptHTML()+esc(v));print(cands.map(esc).join('  '));let p=cands[0];for(const c of cands)while(!c.startsWith(p))p=p.slice(0,-1);parts[parts.length-1]=p;inp.value=parts.join(' ')}
  }
  inp.onkeydown=e=>{
-  if(e.key==='Enter'){const l=inp.value;inp.value='';run(l);scroll()}
+  if(e.key==='Enter'){if(passRes){const f=passRes;passRes=null;const v=inp.value;inp.value='';f(v);return}if(busy)return;const l=inp.value;inp.value='';run(l)}
+  else if(passRes)return;
   else if(e.key==='ArrowUp'){e.preventDefault();if(hi>0)inp.value=hist[--hi]}
   else if(e.key==='ArrowDown'){e.preventDefault();inp.value=hi<hist.length-1?hist[++hi]:(hi=hist.length,'')}
-  else if(e.key==='Tab'){e.preventDefault();complete();scroll()}
+  else if(e.key==='Tab'){e.preventDefault();complete()}
   else if(e.ctrlKey&&e.key==='l'){e.preventDefault();out.innerHTML=''}
   else if(e.ctrlKey&&e.key==='c'){e.preventDefault();print(promptHTML()+esc(inp.value)+'^C');inp.value=''}
  };
  term.onclick=()=>{if(!getSelection().toString())inp.focus()};
  W.el.addEventListener('pointerdown',()=>setTimeout(()=>{if(!getSelection().toString())inp.focus()},0));
  setPrompt();
- print(`<span class="y">Bienvenue sur WebLinux 1.0</span> (navigateur x86_64)\nTape <span class="c">help</span> pour voir les commandes, ou <span class="c">neofetch</span> pour faire le beau.\n`);
+ print(`<span class="y">Bienvenue sur WebLinux 2.0</span>, <b>${esc(cur)}</b> (${isAdmin(cur)?'administrateur : utilise <span class="c">sudo</span> pour les commandes admin':'utilisateur'}).\nTape <span class="c">help</span> pour voir les commandes.\n`);
  setTimeout(()=>inp.focus(),50);return W;
 }
 
 /* ---------- Bureau, menu contextuel, horloge ---------- */
-const ICONS=[{i:'🏠',n:'Dossier personnel',f:()=>openFiles()},{i:'📄',n:'bonjour.txt',f:()=>openEditor('/home/user/bonjour.txt')},{i:'🖥️',n:'Terminal',f:()=>openTerminal()}];
-$('#icons').innerHTML=ICONS.map((d,i)=>`<div class="dico" data-i="${i}"><i>${d.i}</i>${d.n}</div>`).join('');
-$('#icons').ondblclick=e=>{const d=e.target.closest('.dico');if(d)ICONS[d.dataset.i].f()};
+function renderIcons(){if(!cur)return;const hp=pstr(homeP(cur));
+ const L=[{i:'🏠',n:'Dossier personnel',f:()=>openFiles()},{i:'📄',n:'bonjour.txt',f:()=>openEditor(hp+'/bonjour.txt')},{i:'🖥️',n:'Terminal',f:()=>openTerminal()}];
+ $('#icons').innerHTML=L.map((d,i)=>`<div class="dico" data-i="${i}"><i>${d.i}</i>${d.n}</div>`).join('');
+ $('#icons').ondblclick=e=>{const d=e.target.closest('.dico');if(d)L[d.dataset.i].f()};
+ $('#usr').textContent='👤 '+cur}
 const ctx=$('#ctx');
-document.addEventListener('contextmenu',e=>{if(e.target.closest('.win')||e.target.closest('#top'))return;e.preventDefault();
- ctx.innerHTML='<div data-a="t">🖥️ Ouvrir un terminal</div><div data-a="f">📁 Ouvrir les fichiers</div><div data-a="s">🎨 Changer le fond d\'écran</div>';
- ctx.style.left=Math.min(e.clientX,innerWidth-230)+'px';ctx.style.top=Math.min(e.clientY,innerHeight-120)+'px';ctx.style.display='block'});
-ctx.onclick=e=>{const a=e.target.dataset.a;if(a==='t')openTerminal();if(a==='f')openFiles();if(a==='s')openSettings()};
-document.addEventListener('click',e=>{ctx.style.display='none';if(!e.target.closest('#pw'))$('#menu').style.display='none'});
-$('#pw').onclick=()=>{const m=$('#menu');m.style.display=m.style.display==='block'?'none':'block'};
-$('#menu').onclick=e=>{const a=e.target.dataset.a;if(a==='reboot')boot();if(a==='off')poweroff()};
-const clock=()=>{$('#clock').textContent=new Date().toLocaleString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})};
+document.addEventListener('contextmenu',e=>{if(!cur||e.target.closest('.win')||e.target.closest('#top')||e.target.closest('#login'))return;e.preventDefault();
+ ctx.innerHTML='<div data-a="t">🖥️ Ouvrir un terminal</div><div data-a="f">📁 Ouvrir les fichiers</div><div data-a="s">🎨 Apparence…</div><div data-a="l">🔒 Verrouiller</div>';
+ ctx.style.left=Math.min(e.clientX,innerWidth-230)+'px';ctx.style.top=Math.min(e.clientY,innerHeight-170)+'px';ctx.style.display='block'});
+ctx.onclick=e=>{const a=e.target.dataset.a;if(a==='t')openTerminal();if(a==='f')openFiles();if(a==='s')openSettings();if(a==='l')lockScreen()};
+document.addEventListener('click',e=>{ctx.style.display='none';if(!e.target.closest('#qs'))qs.style.display='none'});
+document.addEventListener('keydown',e=>{if(cur&&e.ctrlKey&&e.altKey&&e.key.toLowerCase()==='t'){e.preventDefault();openTerminal()}if(e.key==='Escape'){LA.style.display='none';qs.style.display='none'}});
+const loginClock=()=>`<div class="lt">${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div><div class="ld">${new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</div>`;
+const clock=()=>{$('#clock').textContent=new Date().toLocaleString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});const lc=$('.lclock');if(lc)lc.innerHTML=loginClock()};
 clock();setInterval(clock,10000);
 if(navigator.getBattery)navigator.getBattery().then(b=>{const u=()=>$('#bat').textContent='🔋 '+Math.round(b.level*100)+'%';u();b.onlevelchange=u}).catch(()=>{});
-setWP(+(store.get('wlwp')||0));
 
-/* ---------- Démarrage / extinction ---------- */
-function poweroff(){wins.slice().forEach(w=>w.close());$('#off').style.display='grid'}
-$('#off').onclick=()=>{$('#off').style.display='none';boot()};
-function boot(){
- wins.slice().forEach(w=>w.close());bootTime=Date.now();
+/* ---------- Connexion / verrouillage ---------- */
+let lockedUntil=0,fails=0;
+function finishLogin(name,o){
+ if(cur&&cur!==name)wins.slice().forEach(w=>w.close());
+ cur=name;ssSet('wl2sess',name);lsSet('wl2last',name);users[name].last=Date.now();saveUsers();
+ logEvent('login',`session ouverte pour ${name}`);loadS(name);ensureHome(name);
+ const L=$('#login');L.classList.add('fade');setTimeout(()=>{L.style.display='none';L.innerHTML=''},350);
+ document.body.classList.remove('out');renderIcons();renderDock();
+ if(!wins.length)openTerminal();
+ toast(`Bienvenue, ${name} !`,'👋');
+ if(users[name].def)setTimeout(()=>toast(`Pense à changer le mot de passe par défaut : tape « passwd »`,'⚠️'),1400);
+}
+function showLogin(o={}){
+ const L=$('#login');L.style.display='flex';L.classList.remove('fade');document.body.classList.add('out');
+ let sel=o.lock?cur:null,mode='pick';
+ function draw(){
+  const names=o.lock?[cur]:Object.keys(users);let h=`<div class="lclock">${loginClock()}</div><div class="lbox">`;
+  if(mode==='reg')h+=`<h2>Créer un compte</h2><input id="rn" placeholder="Nom d'utilisateur" maxlength="16" autocomplete="off"><input id="rp" type="password" placeholder="Mot de passe (4 min.)"><input id="rp2" type="password" placeholder="Confirmer"><div class="lerr"></div><div class="lrow"><button id="rb">Retour</button><button class="pri" id="rok">Créer</button></div>`;
+  else if(!sel)h+=`<h2>Qui es-tu ?</h2><div class="lusers">${names.map(n=>`<div class="lu" data-n="${esc(n)}"><div class="av big">${esc(n[0].toUpperCase())}</div>${esc(n)}<small>${users[n].role==='admin'?'administrateur':'utilisateur'}</small></div>`).join('')}</div><a class="llink" id="rg">＋ Créer un compte</a>`;
+  else h+=`<div class="av big">${esc(sel[0].toUpperCase())}</div><h2>${esc(sel)}</h2><input id="lp" type="password" placeholder="Mot de passe" autocomplete="current-password"><div class="lerr"></div><div class="lrow"><button id="lb">${o.lock?'Changer d\'utilisateur':'Retour'}</button><button class="pri" id="lok">Se connecter</button></div>`;
+  h+='</div>';
+  if(!sel&&mode!=='reg'&&users.admin&&users.admin.def)h+=`<div class="lhint">💡 Compte administrateur par défaut : <b>admin</b> / <b>admin</b></div>`;
+  h+=`<div class="lpow"><button id="lsd" title="Éteindre">⏻</button></div>`;
+  L.innerHTML=h;
+  $$('.lu',L).forEach(e=>e.onclick=()=>{sel=e.dataset.n;draw()});
+  const rg=$('#rg',L);if(rg)rg.onclick=()=>{mode='reg';draw()};
+  $('#lsd',L).onclick=poweroff;
+  const box=$('.lbox',L),shake=()=>{box.classList.remove('shake');void box.offsetWidth;box.classList.add('shake')};
+  const lb=$('#lb',L);if(lb)lb.onclick=()=>{if(o.lock)return logout();sel=null;draw()};
+  const lok=$('#lok',L),lp=$('#lp',L);
+  if(lok){const go=async()=>{const er=$('.lerr',L),now=Date.now();if(lockedUntil>now){er.textContent=`Trop d'essais. Réessaie dans ${Math.ceil((lockedUntil-now)/1000)} s.`;return}
+    if(await checkPw(sel,lp.value)){fails=0;finishLogin(sel,o)}
+    else{fails++;logEvent('login',`échec de connexion pour ${sel}`);if(fails>=3){lockedUntil=Date.now()+10000;fails=0;er.textContent='3 échecs : attends 10 secondes.'}else er.textContent='Mot de passe incorrect.';lp.value='';shake()}};
+   lok.onclick=go;lp.onkeydown=e=>{if(e.key==='Enter')go()};lp.focus()}
+  const rok=$('#rok',L);
+  if(rok){const rb=$('#rb',L);rb.onclick=()=>{mode='pick';draw()};
+   const reg=async()=>{const n=$('#rn',L).value.trim().toLowerCase(),p=$('#rp',L).value,p2=$('#rp2',L).value,er=$('.lerr',L);
+    if(!/^[a-z][a-z0-9_-]{1,15}$/.test(n))return er.textContent='Nom invalide (minuscules, chiffres, _ -, 2 à 16).';
+    if(users[n]||n==='root')return er.textContent='Ce nom est déjà pris.';if(p.length<4)return er.textContent='Mot de passe : 4 caractères minimum.';if(p!==p2)return er.textContent='Les mots de passe ne correspondent pas.';
+    await mkUser(n,p,'user');logEvent('useradd',`compte ${n} créé depuis l'écran de connexion`);toast('Compte créé, connecte-toi !','✅');mode='pick';sel=n;draw()};
+   rok.onclick=reg;$('#rp2',L).onkeydown=e=>{if(e.key==='Enter')reg()};$('#rn',L).focus()}
+ }
+ draw();
+}
+function lockScreen(){if(!cur)return;logEvent('login',`écran verrouillé pour ${cur}`);qs.style.display='none';showLogin({lock:true})}
+function logout(){if(cur)logEvent('login',`session fermée pour ${cur}`);wins.slice().forEach(w=>w.close());ssSet('wl2sess',null);cur=null;qs.style.display='none';LA.style.display='none';loadS(lsGet('wl2last')||'');showLogin()}
+function poweroff(){if(cur)logEvent('system',`extinction (${cur})`);wins.slice().forEach(w=>w.close());ssSet('wl2sess',null);cur=null;qs.style.display='none';$('#login').style.display='none';$('#off').style.display='grid'}
+$('#off').onclick=()=>{$('#off').style.display='none';boot(true)};
+
+/* ---------- Démarrage ---------- */
+const ready=(async()=>{if(!Object.keys(users).length){await mkUser('admin','admin','admin');users.admin.def=true;saveUsers()}else syncSys()})();
+function boot(fresh){
+ wins.slice().forEach(w=>w.close());bootTime=Date.now();if(fresh){ssSet('wl2sess',null);cur=null}
+ document.body.classList.add('out');$('#login').style.display='none';qs.style.display='none';LA.style.display='none';
  const b=$('#boot');b.style.display='block';b.style.opacity=1;b.style.transition='';b.innerHTML='';
- const L=['[  <span style="color:#8ae234">OK</span>  ] Démarrage du noyau Linux 6.8.0-web','[  <span style="color:#8ae234">OK</span>  ] Monté le système de fichiers racine','[  <span style="color:#8ae234">OK</span>  ] Démarré systemd-journald','[  <span style="color:#8ae234">OK</span>  ] Atteint la cible Réseau','[  <span style="color:#8ae234">OK</span>  ] Démarré le gestionnaire d\'affichage','[  <span style="color:#8ae234">OK</span>  ] Atteint la cible Interface graphique','','WebLinux 1.0 — bienvenue, user !'];
+ const ok='[  <span style="color:#8ae234">OK</span>  ] ';
+ const L=[ok+'Démarrage du noyau Linux 6.8.0-web',ok+'Monté le système de fichiers racine',ok+'Démarré systemd-journald',ok+'Atteint la cible Réseau',ok+'Démarré le gestionnaire de comptes',ok+'Atteint la cible Interface graphique','','WebLinux 2.0 — prêt.'];
  let i=0,done=false;
- const fin=()=>{if(done)return;done=true;b.style.transition='opacity .5s';b.style.opacity=0;setTimeout(()=>{b.style.display='none';openTerminal()},500)};
- const step=()=>{if(done)return;if(i<L.length){b.innerHTML+=L[i++]+'\n';b.style.whiteSpace='pre';setTimeout(step,170)}else setTimeout(fin,350)};
+ const fin=async()=>{if(done)return;done=true;await ready;b.style.transition='opacity .5s';b.style.opacity=0;
+  setTimeout(()=>{b.style.display='none';const s=ssGet('wl2sess');
+   if(s&&users[s]){cur=s;loadS(s);document.body.classList.remove('out');renderIcons();renderDock();openTerminal()}
+   else{loadS(lsGet('wl2last')||'');showLogin()}},500)};
+ const step=()=>{if(done)return;if(i<L.length){b.innerHTML+=L[i++]+'\n';setTimeout(step,150)}else setTimeout(fin,300)};
  b.onclick=fin;step();
 }
-renderDock();boot();
+netIcon();applyS();renderDock();boot();
 </script>
 </body>
 </html>
