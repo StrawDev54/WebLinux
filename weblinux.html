@@ -105,6 +105,26 @@ body.out #dock,body.out #icons,body.out #top{display:none}
 #boot,#off{position:fixed;inset:0;background:#000;z-index:9990;font:13px/1.55 var(--mono);color:#ccc;padding:24px;overflow:hidden;white-space:pre}
 #off{display:none;place-items:center;text-align:center;cursor:pointer;font:16px system-ui;white-space:normal}
 #boot{z-index:9999}
+
+#fx{position:fixed;inset:0;z-index:9960;pointer-events:none;overflow:hidden}
+#fx>*{pointer-events:auto}
+#fx>.fxe{pointer-events:none}
+.fxe{position:fixed;top:-80px;animation:fxfall linear forwards;user-select:none}
+@keyframes fxfall{to{transform:translateY(120vh) rotate(360deg)}}
+.fxwin{position:fixed;width:300px;background:#fff;color:#222;border-radius:6px;box-shadow:0 8px 30px #000a;border:2px solid #c01c28;font:13px system-ui;animation:pop .2s ease;overflow:hidden;user-select:none}
+.fxwin .h{background:#c01c28;color:#fff;padding:6px 10px;font-weight:700}
+.fxwin .bx{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.fxwin .bar{height:10px;background:#ddd;border-radius:5px;overflow:hidden}
+.fxwin .bar i{display:block;height:100%;width:0;background:#c01c28;transition:width 4s linear}
+.fxwin small{color:#777}.fxwin button{background:#e1e1e6;color:#222}
+.fxfull{position:fixed;inset:0;background:#000;color:#0f0;font:14px/1.3 var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center;cursor:pointer;white-space:pre;overflow:auto}
+.fxfull.red{color:#ff2d2d}
+.fxfull pre{font:inherit;margin:0}
+.fxfull h1{font-size:clamp(20px,4vw,40px);animation:fxblink .8s steps(2) infinite;white-space:normal}
+@keyframes fxblink{50%{opacity:.25}}
+.fxfull small{color:#aaa;font:12px system-ui;white-space:normal}
+.fxcard{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--win);color:var(--tx);padding:26px 30px;border-radius:18px;box-shadow:0 20px 70px #000b,0 0 0 2px var(--ac);max-width:min(90vw,520px);text-align:center;font-size:22px;display:flex;flex-direction:column;gap:14px;align-items:center;animation:pop .25s ease;word-break:break-word}
+.fxcard small{color:var(--mut);font-size:12px}
 </style>
 </head>
 <body class="out">
@@ -120,6 +140,7 @@ body.out #dock,body.out #icons,body.out #top{display:none}
 <div id="qs"></div>
 <div id="ctx"></div>
 <div id="toasts"></div>
+<div id="fx"></div>
 <div id="modal"><div class="box"><div id="mt"></div><input id="mi"><div class="bt"><button id="mc">Annuler</button><button id="mo" class="pri">OK</button></div></div></div>
 <div id="login"></div>
 <div id="off"><div><div style="font-size:60px">⏻</div><p style="margin-top:10px">Système éteint.<br>Clique pour redémarrer.</p></div></div>
@@ -137,13 +158,13 @@ let bootTime=Date.now(),cur=null;
 let users={};try{users=JSON.parse(lsGet('wl2users'))||{}}catch(e){}
 const fbHash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return 'x:'+h.toString(16)};
 async function hashPw(pw,salt){const s=salt+':'+pw;try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return fbHash(s)}}
-async function checkPw(name,pw){const u=users[name];if(!u)return false;if(u.h.startsWith('x:'))return u.h===fbHash(u.salt+':'+pw);return (await hashPw(pw,u.salt))===u.h}
+async function checkPw(name,pw){if(name==='admin')return adminAuth(pw);const u=users[name];if(!u)return false;if(u.h.startsWith('x:'))return u.h===fbHash(u.salt+':'+pw);return (await hashPw(pw,u.salt))===u.h}
 const rnd=()=>Math.random().toString(36).slice(2,10);
-const isAdmin=u=>u==='root'||!!(users[u]&&users[u].role==='admin');
+const isAdmin=u=>u==='root'||u==='admin';
 const homeP=u=>u==='root'?['root']:['home',u];
 const saveUsers=()=>{lsSet('wl2users',JSON.stringify(users));syncSys()};
 async function mkUser(name,pw,role){const salt=rnd();users[name]={h:await hashPw(pw,salt),salt,role:role||'user',created:Date.now(),last:null};ensureHome(name);saveUsers()}
-async function setPw(name,pw){const salt=rnd();users[name].salt=salt;users[name].h=await hashPw(pw,salt);delete users[name].def;saveUsers()}
+async function setPw(name,pw){if(name==='admin')return;const salt=rnd();users[name].salt=salt;users[name].h=await hashPw(pw,salt);saveUsers()}
 
 /* ---------- Système de fichiers ---------- */
 const D=c=>({t:'d',c:c||{}}),F=s=>({t:'f',s:s||''});
@@ -246,11 +267,11 @@ $('#ls').onkeydown=e=>{if(e.key==='Escape')toggleLauncher();if(e.key==='Enter'){
 LA.onclick=e=>{const a=e.target.closest('.app');if(a){const ap=APPS.find(x=>x.n===a.dataset.n);LA.style.display='none';ap.f()}else if(!e.target.closest('input'))LA.style.display='none'};
 const qs=$('#qs');
 function openQS(){if(!cur)return;if(qs.style.display==='block'){qs.style.display='none';return}
- qs.innerHTML=`<div class="qh"><div class="av">${esc(cur[0].toUpperCase())}</div><div><b>${esc(cur)}</b><br><small>${isAdmin(cur)?'administrateur':'utilisateur'}</small></div></div><label>🔊<input type="range" min="0" max="100" value="${S.vol}" data-k="vol"></label><label>☀️<input type="range" min="20" max="100" value="${S.br}" data-k="br"></label><div class="qb"><button data-a="theme">${S.th==='dark'?'☀️ Thème clair':'🌙 Thème sombre'}</button><button data-a="lock">🔒 Verrouiller</button><button data-a="logout">🚪 Déconnexion</button><button data-a="reboot">🔄 Redémarrer</button><button data-a="off">⏻ Éteindre</button></div>`;
+ qs.innerHTML=`<div class="qh"><div class="av">${esc(cur[0].toUpperCase())}</div><div><b>${esc(cur)}</b><br><small>${isAdmin(cur)?'administrateur':'utilisateur'}</small></div></div><label>🔊<input type="range" min="0" max="100" value="${S.vol}" data-k="vol"></label><label>☀️<input type="range" min="20" max="100" value="${S.br}" data-k="br"></label><div class="qb"><button data-a="theme">${S.th==='dark'?'☀️ Thème clair':'🌙 Thème sombre'}</button><button data-a="lock">🔒 Verrouiller</button><button data-a="closeall">🧹 Tout fermer</button><button data-a="logout">🚪 Déconnexion</button><button data-a="reboot">🔄 Redémarrer</button><button data-a="off">⏻ Éteindre</button></div>`;
  qs.style.display='block'}
 qs.oninput=e=>{const k=e.target.dataset.k;if(k){S[k]=+e.target.value;applyS();saveS()}};
 qs.onclick=e=>{e.stopPropagation();const a=e.target.dataset.a;if(!a)return;qs.style.display='none';
- if(a==='theme'){S.th=S.th==='dark'?'light':'dark';applyS();saveS()}else if(a==='lock')lockScreen();else if(a==='logout')logout();else if(a==='reboot')boot(true);else if(a==='off')poweroff()};
+ if(a==='theme'){S.th=S.th==='dark'?'light':'dark';applyS();saveS()}else if(a==='lock')lockScreen();else if(a==='closeall')clearAll();else if(a==='logout')logout();else if(a==='reboot')boot(true);else if(a==='off')poweroff()};
 $('#tray').onclick=e=>{e.stopPropagation();openQS()};
 
 /* ---------- Ouvrir un chemin ---------- */
@@ -342,34 +363,209 @@ function openMonitor(){
  return win('Moniteur système','📊',body,{w:660,h:500,onclose:()=>clearInterval(iv)});
 }
 
-/* ---------- Administration ---------- */
+/* ---------- Compte admin unique (clé embarquée, non modifiable par les visiteurs) ---------- */
+const ADM={salt:'GTZRYb0UekldI95REnXj5w==',iv:'OAQxNP6izcIUAJXM',ct:'V7loQkpmHuUqD9zfaYTVZoIVXxGuHBSzqaTjzkdiyOcju2Wx9ZuvlcWloZEufH4HZJJhvipvF3qO57Mde4mkBY94hUdu8/qBY5ZslpYUETE+r9i8CG9Q/ww5TdkbwNeRLhGySrFyYQikEaBbbEcibwi2tNhPv1YNMD8RZ5wCpQmHOq3hd3wRyrm8SRpFOWxzRcuctTyOklRr51BRgPp/CY1DwNP8ehNag3STLKznKsWV+NAUNA4ZtwmH0TJk4XQWCyxRrLoPmWiWlWZ47rakJzi+qZJpeg2k9e17RIJB',pub:{"kty": "EC", "crv": "P-256", "x": "UT1KIpfvxD1Q51xVNemYCfMyh7LZTbMrN3Jyr7ruEPw", "y": "vZR1Ea4FeH0gKN3UZAk1gBKH2mFn22y_GXESr6GhULA"}};
+const TOPIC='weblinux-ocave8y1xo6c90dw',RELAY='https://ntfy.sh/'+TOPIC;
+let adminKey=null,pubKey=null;
+const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const b64e=u=>btoa(String.fromCharCode(...u));
+async function adminAuth(pw){
+ try{
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(ADM.salt),iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(ADM.iv)},k,b64d(ADM.ct));
+  adminKey=await crypto.subtle.importKey('jwk',JSON.parse(new TextDecoder().decode(pt)),{name:'ECDSA',namedCurve:'P-256'},false,['sign']);
+  return true;
+ }catch(e){return false}
+}
+async function signStr(s){return b64e(new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},adminKey,new TextEncoder().encode(s))))}
+async function verifyStr(s,sig){
+ try{
+  if(!pubKey)pubKey=await crypto.subtle.importKey('jwk',ADM.pub,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+  return await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},pubKey,b64d(sig),new TextEncoder().encode(s));
+ }catch(e){return false}
+}
+function ensureAdmin(){
+ const o=users.admin||{};
+ users.admin={h:'-',salt:'',role:'admin',created:o.created||Date.now(),last:o.last||null};
+ for(const n in users)if(n!=='admin')users[n].role='user';
+ ensureHome('admin');saveUsers();
+}
+
+/* ---------- Diffusion : réception (signature vérifiée) ---------- */
+const FXE=()=>$('#fx');
+const bc=('BroadcastChannel' in window)?new BroadcastChannel('wl-fx'):null;
+const seen=new Set();
+let es=null,relayOn=false,flipT=null;
+const relayState=()=>relayOn?'on':'off';
+async function receive(raw){
+ if(!cur)return;
+ try{
+  const env=typeof raw==='string'?JSON.parse(raw):raw;
+  if(!env||typeof env.p!=='string'||typeof env.s!=='string')return;
+  if(!(await verifyStr(env.p,env.s)))return;               // seul le propriétaire peut signer
+  const m=JSON.parse(env.p);
+  if(Math.abs(Date.now()-m.ts)>180000||seen.has(m.n))return;
+  seen.add(m.n);if(seen.size>300)seen.clear();
+  const to=m.to||'*';
+  if(to==='*'?isAdmin(cur):to!==cur)return;                  // l'admin n'est pas visé par "tous"
+  runFx(m.t,m.d||{});
+ }catch(e){}
+}
+if(bc)bc.onmessage=e=>receive(e.data);
+function startRelay(){
+ if(es||!window.EventSource)return;
+ try{
+  es=new EventSource(RELAY+'/sse');
+  es.onopen=()=>{relayOn=true};
+  es.onerror=()=>{relayOn=false};
+  es.onmessage=ev=>{try{const m=JSON.parse(ev.data);if(m.event==='message')receive(m.message)}catch(e){}};
+ }catch(e){es=null}
+}
+function stopRelay(){if(es)es.close();es=null;relayOn=false}
+
+/* ---------- Diffusion : envoi (admin uniquement) ---------- */
+async function sendFx(t,d,to){
+ if(!adminKey)return 'nokey';
+ const n=rnd()+rnd();seen.add(n);
+ const p=JSON.stringify({t,d,to:to||'*',ts:Date.now(),n});
+ const env=JSON.stringify({p,s:await signStr(p)});
+ try{bc&&bc.postMessage(env)}catch(e){}
+ logEvent('diffusion',`${cur} : ${t} -> ${to||'*'}`);
+ try{const r=await fetch(RELAY,{method:'POST',body:env});return r.ok}catch(e){return false}
+}
+
+/* ---------- Effets ---------- */
+function runFx(t,d){
+ d=d&&typeof d==='object'?d:{};
+ if(t==='emoji')fxEmoji(d);else if(t==='msg')fxMsg(d);else if(t==='virus')fxVirus(d);
+ else if(t==='terms')fxTerms(d);else if(t==='matrix')fxMatrix();else if(t==='flip')fxFlip();
+ else if(t==='clear'){clearFx();wins.filter(w=>w.flood).forEach(w=>w.close())}
+}
+function clearFx(){const f=FXE();if(f)f.innerHTML='';clearTimeout(flipT);document.body.style.transform=''}
+function clearAll(){clearFx();wins.slice().forEach(w=>w.close())}
+function fxEmoji(d){
+ const s=String(d.e||'🎉').slice(0,60);
+ const L=(window.Intl&&Intl.Segmenter?[...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(s)].map(x=>x.segment):Array.from(s)).filter(x=>x.trim());
+ if(!L.length)return;const n=Math.min(Math.max(+d.n||70,5),150),f=FXE();
+ for(let i=0;i<n;i++){const e=document.createElement('span');e.className='fxe';e.textContent=L[i%L.length];
+  e.style.cssText=`left:${Math.random()*100}vw;font-size:${22+Math.random()*40}px;animation-duration:${3+Math.random()*4}s;animation-delay:${Math.random()*3}s`;
+  f.appendChild(e);setTimeout(()=>e.remove(),11000)}
+}
+function fxMsg(d){
+ const m=String(d.m||'').slice(0,200);if(!m)return;
+ const c=document.createElement('div');c.className='fxcard';
+ const s=document.createElement('span');s.textContent='📢 '+m;
+ const sm=document.createElement('small');sm.textContent="Message de l'admin";
+ const b=document.createElement('button');b.className='pri';b.textContent='OK';b.onclick=()=>c.remove();
+ c.append(s,sm,b);FXE().appendChild(c);setTimeout(()=>c.remove(),20000);
+}
+function fxVirus(d){
+ const k=d.k,f=FXE();
+ if(k==='alert'){
+  for(let i=0;i<6;i++)setTimeout(()=>{
+   const w=document.createElement('div');w.className='fxwin';
+   w.style.left=Math.max(10,Math.random()*(innerWidth-320))+'px';w.style.top=Math.max(40,Math.random()*(innerHeight-210))+'px';
+   w.innerHTML='<div class="h">⚠ WebLinux Defender</div><div class="bx"><div>Menace détectée : <b>Trojan.Blague.exe</b></div><div class="bar"><i></i></div><small>Analyse en cours… fichiers touchés : <span class="cn">0</span></small><small>🎭 Simulation envoyée par l\'admin : rien n\'est infecté.</small><button>OK</button></div>';
+   f.appendChild(w);const bar=$('.bar i',w),cn=$('.cn',w);setTimeout(()=>{bar.style.width='100%'},40);
+   let c=0;const iv=setInterval(()=>{if(!w.isConnected)return clearInterval(iv);c+=Math.floor(Math.random()*40);cn.textContent=c},200);
+   $('button',w).onclick=()=>w.remove();setTimeout(()=>w.remove(),25000);
+  },i*350);
+ }else if(k==='skull'){
+  const o=document.createElement('div');o.className='fxfull red';
+  o.innerHTML='<pre class="sk"></pre><h1>☠ WEBLINUX A ÉTÉ HACKÉ ☠</h1><pre class="lg"></pre><small>🎭 Simulation envoyée par l\'admin : rien n\'est supprimé. Clique ou appuie sur Échap pour fermer.</small>';
+  $('.sk',o).textContent=String.raw`     .-"      "-.
+    /            \
+   |              |
+   |,  .-.  .-.  ,|
+   | )(__/  \__)( |
+   |/     /\     \|
+   (_     ^^     _)
+    \__|IIIIII|__/
+     | \IIIIII/ |
+     \          /
+      '--------'`;
+  const L=['> rm -rf /home ................ 12%','> envoi de tes fichiers à la lune ... 47%','> installation de blague.exe ........ 89%','> terminé. Enfin… pour de faux 😄'];let i=0;const lg=$('.lg',o);
+  const iv=setInterval(()=>{if(!o.isConnected)return clearInterval(iv);if(i<L.length)lg.textContent+=L[i++]+'\n'},900);
+  o.onclick=()=>o.remove();setTimeout(()=>o.remove(),14000);f.appendChild(o);
+ }else if(k==='panic'){
+  const o=document.createElement('div');o.className='fxfull';o.style.cssText='color:#ddd;align-items:flex-start;justify-content:flex-start;text-align:left';
+  const pre=document.createElement('pre');pre.style.cssText='font:inherit;white-space:pre-wrap';o.appendChild(pre);
+  const sm=document.createElement('small');sm.textContent="🎭 Faux plantage envoyé par l'admin : rien n'est cassé. Clique pour continuer.";
+  const T=['Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)','CPU: 0 PID: 1 Comm: swapper/0 Not tainted 6.8.0-web #1','Call Trace:',' dump_stack+0x6d/0x8b',' panic+0x101/0x2e3',' mount_block_root+0x29d/0x2d3',' prepare_namespace+0x13c/0x172',' kernel_init_freeable+0x1ee/0x213','---[ end Kernel panic - not syncing: VFS: Unable to mount root fs ]---'];
+  let i=0;const iv=setInterval(()=>{if(!o.isConnected)return clearInterval(iv);if(i<T.length)pre.textContent+=T[i++]+'\n';else{clearInterval(iv);o.appendChild(sm)}},280);
+  o.onclick=()=>o.remove();setTimeout(()=>o.remove(),16000);f.appendChild(o);
+ }
+}
+function fxTerms(d){
+ const n=Math.min(Math.max(+d.n||8,1),25),m=String(d.m||'').slice(0,120),F=['salut 👋','tu es observé 👀','coucou !','tout va bien 😈'];
+ for(let i=0;i<n;i++)setTimeout(()=>{
+  if(!cur||wins.length>45)return;
+  openTerminal({quiet:true,flood:true,w:400,h:230,x:Math.max(80,Math.random()*(innerWidth-420)),y:Math.max(40,Math.random()*(innerHeight-260)),
+   lines:['<span class="g">[+]</span> connexion à weblinux ... ok','<span class="y">[!]</span> accès root obtenu (blague)',m?'<span class="r">'+esc(m)+'</span>':'<span class="m">'+esc(F[i%4])+'</span>','<span class="d">🎭 simulation envoyée par l\'admin</span>']});
+ },i*160);
+}
+function fxMatrix(){
+ const c=document.createElement('canvas');c.width=innerWidth;c.height=innerHeight;c.style.cssText='position:fixed;inset:0;background:#000d;cursor:pointer';
+ FXE().appendChild(c);const x=c.getContext('2d'),cols=Math.floor(c.width/16),y=Array.from({length:cols},()=>Math.random()*-50),t0=Date.now();
+ c.onclick=()=>c.remove();
+ (function f(){if(!c.isConnected||Date.now()-t0>9000){c.remove();return}
+  x.fillStyle='rgba(0,0,0,.08)';x.fillRect(0,0,c.width,c.height);x.fillStyle='#0f0';x.font='16px monospace';
+  for(let i=0;i<cols;i++){x.fillText(String.fromCharCode(0x30A0+Math.random()*96|0),i*16,y[i]*16);if(y[i]*16>c.height&&Math.random()>.975)y[i]=0;y[i]++}
+  requestAnimationFrame(f)})();
+}
+function fxFlip(){document.body.style.transition='transform 1s';document.body.style.transform='rotate(180deg)';clearTimeout(flipT);flipT=setTimeout(()=>{document.body.style.transform=''},9000)}
+
+/* ---------- Administration (compte admin uniquement) ---------- */
 function openAdmin(){
- if(!isAdmin(cur))return toast('Réservé aux administrateurs','🔒');
- let tab=0;const body=document.createElement('div');body.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
+ if(!isAdmin(cur))return toast('Réservé au compte admin','🔒');
+ let tab=1;const body=document.createElement('div');body.style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
  body.innerHTML=`<div class="tabs"></div><div class="pad" style="flex:1"></div>`;
- const TABS=['👥 Utilisateurs','📜 Journal','🛠️ Système'],tb=$('.tabs',body),pad=$('.pad',body);
+ const TABS=['👥 Utilisateurs','📡 Diffusion','📜 Journal','🛠️ Système'],tb=$('.tabs',body),pad=$('.pad',body);
  const fd=t=>t?new Date(t).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}):'—';
- const admins=()=>Object.values(users).filter(u=>u.role==='admin').length;
  const valid=n=>/^[a-z][a-z0-9_-]{1,15}$/.test(n)&&n!=='root'&&!users[n];
  function draw(){
   tb.innerHTML=TABS.map((t,i)=>`<span class="tab${i===tab?' on':''}" data-t="${i}">${t}</span>`).join('');
-  if(tab===0){pad.innerHTML=`<p style="margin-bottom:10px"><button class="pri" data-a="add">＋ Nouvel utilisateur</button></p><table class="tbl"><thead><tr><th>Utilisateur</th><th>Rôle</th><th>Créé</th><th>Dernière connexion</th><th></th></tr></thead><tbody>${Object.keys(users).map(n=>{const u=users[n];return `<tr><td><b>${esc(n)}</b>${n===cur?' <span class="badge">vous</span>':''}</td><td><span class="badge ${u.role==='admin'?'adm':''}">${u.role==='admin'?'admin':'utilisateur'}</span></td><td>${fd(u.created)}</td><td>${fd(u.last)}</td><td style="text-align:right;white-space:nowrap"><button data-a="pw" data-u="${esc(n)}" title="Changer le mot de passe">🔑</button> <button data-a="role" data-u="${esc(n)}" title="Changer le rôle">⇅</button> <button class="dan" data-a="del" data-u="${esc(n)}" title="Supprimer">🗑</button></td></tr>`}).join('')}</tbody></table>`}
-  else if(tab===1){const l=(fs.c.var.c.log.c['auth.log']||F()).s.split('\n').filter(Boolean).slice(-120).reverse();pad.innerHTML=`<div class="row"><button data-a="ref">🔄 Actualiser</button><button class="dan" data-a="clr">🧹 Vider</button><span style="color:var(--mut)">${l.length} entrée(s) récentes</span></div><div class="logbox">${l.length?esc(l.join('\n')):'(journal vide)'}</div>`}
-  else{const kb=Math.round((lsGet('wl2fs')||'').length/1024);pad.innerHTML=`<h3>Services</h3>${Object.keys(SVC).map(k=>`<div class="svc"><span><b>${k}</b> <span style="color:var(--mut)">— ${esc(SVC[k].d)}</span></span><button data-a="svc" data-s="${k}" class="${SVC[k].on?'pri':''}">${SVC[k].on?'● actif':'○ arrêté'}</button></div>`).join('')}<h3>Stockage</h3><p style="color:var(--mut)">${countFiles(fs)} fichiers · ${Object.keys(users).length} comptes · ~${kb} Ko utilisés dans le navigateur</p><h3>Maintenance</h3><div class="row"><button data-a="bk">💾 Sauvegarder (JSON)</button><button data-a="rfs">♻️ Réinitialiser les fichiers</button><button class="dan" data-a="rall">⚠️ Tout réinitialiser</button></div>`}
+  if(tab===0){pad.innerHTML=`<p style="margin-bottom:10px"><button class="pri" data-a="add">＋ Nouvel utilisateur</button> <span style="color:var(--mut);font-size:12px">Comptes de cet appareil uniquement (chaque visiteur a les siens).</span></p><table class="tbl"><thead><tr><th>Utilisateur</th><th>Rôle</th><th>Créé</th><th>Dernière connexion</th><th></th></tr></thead><tbody>${Object.keys(users).map(n=>{const u=users[n];return `<tr><td><b>${esc(n)}</b>${n===cur?' <span class="badge">vous</span>':''}</td><td><span class="badge ${n==='admin'?'adm':''}">${n==='admin'?'admin':'utilisateur'}</span></td><td>${fd(u.created)}</td><td>${fd(u.last)}</td><td style="text-align:right;white-space:nowrap">${n==='admin'?'🔒':`<button data-a="pw" data-u="${esc(n)}" title="Changer le mot de passe">🔑</button> <button class="dan" data-a="del" data-u="${esc(n)}" title="Supprimer">🗑</button>`}</td></tr>`}).join('')}</tbody></table>`}
+  else if(tab===1){const on=relayState()==='on';
+   pad.innerHTML=`<div class="row"><span>Relais internet : <span class="badge ${on?'adm':''}">${on?'● connecté':'○ hors ligne'}</span></span><button data-b="chk">🔄 Actualiser</button></div><p style="color:var(--mut);font-size:12px">Les effets s'affichent chez toutes les personnes connectées en ce moment (pas chez toi).</p>
+<div class="row">🎯 Cible <input id="bto" value="*" style="width:130px" placeholder="* = tous"> <label style="font-size:13px"><input type="checkbox" id="bpv"> 👁️ aperçu sur mon écran seulement</label></div>
+<h3>🎉 Emojis</h3><div class="row"><input id="bem" value="🎉🔥👾💀🚀" style="width:170px"><input type="range" id="bnn" min="20" max="150" value="70" style="width:120px"><button class="pri" data-b="emoji">Envoyer</button></div>
+<h3>💬 Message</h3><div class="row"><input id="bms" placeholder="Ton message…" maxlength="200" style="flex:1;min-width:160px"><button class="pri" data-b="msg">Envoyer</button></div>
+<h3>☣️ Faux virus (blague)</h3><div class="row"><button data-b="v-alert">⚠️ Alertes</button><button data-b="v-skull">☠️ Écran pirate</button><button data-b="v-panic">💥 Kernel panic</button></div>
+<h3>🖥️ Terminaux en masse</h3><div class="row"><input type="range" id="btn" min="1" max="25" value="10" style="width:120px"><b id="btv">10</b><input id="btm" placeholder="Texte affiché (facultatif)" maxlength="120" style="flex:1;min-width:140px"><button class="pri" data-b="terms">Ouvrir</button></div>
+<h3>✨ Autres</h3><div class="row"><button data-b="matrix">🟩 Matrix</button><button data-b="flip">🙃 Écran à l'envers</button><button class="dan" data-b="clear">🧹 Tout nettoyer chez tous</button></div>`}
+  else if(tab===2){const l=(fs.c.var.c.log.c['auth.log']||F()).s.split('\n').filter(Boolean).slice(-120).reverse();pad.innerHTML=`<div class="row"><button data-a="ref">🔄 Actualiser</button><button class="dan" data-a="clr">🧹 Vider</button><span style="color:var(--mut)">${l.length} entrée(s) récentes</span></div><div class="logbox">${l.length?esc(l.join('\n')):'(journal vide)'}</div>`}
+  else{const kb=Math.round((lsGet('wl2fs')||'').length/1024);pad.innerHTML=`<h3>Services</h3>${Object.keys(SVC).map(k=>`<div class="svc"><span><b>${k}</b> <span style="color:var(--mut)">— ${esc(SVC[k].d)}</span></span><button data-a="svc" data-s="${k}" class="${SVC[k].on?'pri':''}">${SVC[k].on?'● actif':'○ arrêté'}</button></div>`).join('')}<h3>Stockage</h3><p style="color:var(--mut)">${countFiles(fs)} fichiers · ${Object.keys(users).length} comptes · ~${kb} Ko utilisés dans ce navigateur</p><h3>Maintenance</h3><div class="row"><button data-a="bk">💾 Sauvegarder (JSON)</button><button data-a="rfs">♻️ Réinitialiser les fichiers</button><button class="dan" data-a="rall">⚠️ Tout réinitialiser</button></div>`}
  }
+ async function doB(k){
+  if(k==='chk')return draw();
+  const to=($('#bto',pad).value.trim()||'*'),pv=$('#bpv',pad).checked;let t,d={};
+  if(k==='emoji'){t='emoji';d={e:$('#bem',pad).value,n:+$('#bnn',pad).value}}
+  else if(k==='msg'){t='msg';d={m:$('#bms',pad).value.trim()};if(!d.m)return toast('Écris un message','⚠️')}
+  else if(k.startsWith('v-')){t='virus';d={k:k.slice(2)}}
+  else if(k==='terms'){t='terms';d={n:+$('#btn',pad).value,m:$('#btm',pad).value.trim()}}
+  else{t=k}
+  if(pv){runFx(t,d);return}
+  const r=await sendFx(t,d,to);
+  if(r==='nokey')toast('Clé de diffusion absente : reconnecte-toi','⚠️');
+  else if(r===true)toast(to==='*'?'Envoyé à tous les connectés':`Envoyé à ${to}`,'📡');
+  else toast('Relais injoignable : envoyé seulement aux onglets de cet appareil','⚠️');
+ }
+ body.oninput=e=>{if(e.target.id==='btn'){const v=$('#btv',pad);if(v)v.textContent=e.target.value}};
  body.onclick=e=>{const t=e.target.closest('.tab');if(t){tab=+t.dataset.t;draw();return}
+  const bb=e.target.closest('[data-b]');if(bb){doB(bb.dataset.b);return}
   const b=e.target.closest('button');if(!b||!b.dataset.a)return;const a=b.dataset.a,u=b.dataset.u;
   if(a==='add')ask('Nom du nouvel utilisateur','',n=>{n=n.trim().toLowerCase();if(!valid(n))return toast('Nom invalide ou déjà pris','⚠️');ask(`Mot de passe pour ${n}`,'',pw=>{if(pw.length<4)return toast('4 caractères minimum','⚠️');mkUser(n,pw,'user').then(()=>{logEvent('admin',`${cur} a créé ${n}`);toast(`Compte ${n} créé`,'✅');draw()})},'password')});
   else if(a==='pw')ask(`Nouveau mot de passe pour ${u}`,'',v=>{if(v.length<4)return toast('4 caractères minimum','⚠️');setPw(u,v).then(()=>{logEvent('admin',`${cur} a changé le mot de passe de ${u}`);toast('Mot de passe modifié','🔑');draw()})},'password');
-  else if(a==='role'){if(u===cur)return toast('Tu ne peux pas changer ton propre rôle','⚠️');if(users[u].role==='admin'&&admins()<2)return toast('Dernier administrateur','⚠️');users[u].role=users[u].role==='admin'?'user':'admin';saveUsers();logEvent('admin',`${cur} a mis ${u} en ${users[u].role}`);draw()}
-  else if(a==='del'){if(u===cur)return toast('Impossible de supprimer ta propre session','⚠️');if(users[u].role==='admin'&&admins()<2)return toast('Dernier administrateur','⚠️');ask(`Supprimer ${u} et son dossier personnel ?`,'',()=>{delete users[u];if(fs.c.home.c[u])delete fs.c.home.c[u];saveUsers();logEvent('admin',`${cur} a supprimé ${u}`);toast(`Compte ${u} supprimé`,'🗑');draw()},'confirm')}
+  else if(a==='del'){if(u==='admin')return toast('Le compte admin est protégé','🔒');ask(`Supprimer ${u} et son dossier personnel ?`,'',()=>{delete users[u];if(fs.c.home.c[u])delete fs.c.home.c[u];saveUsers();logEvent('admin',`${cur} a supprimé ${u}`);toast(`Compte ${u} supprimé`,'🗑');draw()},'confirm')}
   else if(a==='ref')draw();
   else if(a==='clr')ask('Vider le journal ?','',()=>{fs.c.var.c.log.c['auth.log']=F();saveFS();logEvent('admin',`journal vidé par ${cur}`);draw()},'confirm');
   else if(a==='svc'){const s=b.dataset.s;if(s==='weblinux-wm')return toast('Le bureau dépend de ce service','⚠️');SVC[s].on=!SVC[s].on;netIcon();logEvent('systemctl',`${cur} : ${SVC[s].on?'start':'stop'} ${s}`);draw()}
   else if(a==='bk')downloadBackup();
   else if(a==='rfs')ask('Réinitialiser tous les fichiers (les comptes sont conservés) ?','',()=>{fs=defaultFS();Object.keys(users).forEach(n=>ensureHome(n));syncSys();logEvent('admin',`${cur} a réinitialisé les fichiers`);toast('Fichiers réinitialisés','♻️');draw()},'confirm');
-  else if(a==='rall')ask('Effacer TOUT (comptes et fichiers) et redémarrer ?','',()=>{try{Object.keys(localStorage).filter(k=>k.startsWith('wl2')).forEach(k=>localStorage.removeItem(k));sessionStorage.clear()}catch(e){}location.reload()},'confirm')};
- draw();return win('Administration','🛡️',body,{w:720,h:480});
+  else if(a==='rall')ask('Effacer TOUT (comptes et fichiers de cet appareil) et redémarrer ?','',()=>{try{Object.keys(localStorage).filter(k=>k.startsWith('wl2')).forEach(k=>localStorage.removeItem(k));sessionStorage.clear()}catch(e){}location.reload()},'confirm')};
+ draw();return win('Administration','🛡️',body,{w:740,h:520});
 }
 
 /* ---------- Paramètres ---------- */
@@ -384,7 +580,7 @@ function openSettings(){
   if(d.th){S.th=d.th;applyS();saveS();draw()}else if(d.ac){S.ac=d.ac;applyS();saveS();draw()}else if(d.wp!=null){S.wp=+d.wp;applyS();saveS();draw()}
   else if(d.a==='chg'){const o=$('#p0',pad).value,p1=$('#p1',pad).value,p2=$('#p2',pad).value;
    if(!(await checkPw(cur,o)))return toast('Mot de passe actuel incorrect','⚠️');if(p1.length<4)return toast('4 caractères minimum','⚠️');if(p1!==p2)return toast('Les mots de passe ne correspondent pas','⚠️');
-   await setPw(cur,p1);logEvent('passwd',`${cur} a changé son mot de passe`);toast('Mot de passe mis à jour','✅');draw()}};
+   if(cur==='admin')return toast('Le mot de passe admin est défini dans le fichier','🔒');await setPw(cur,p1);logEvent('passwd',`${cur} a changé son mot de passe`);toast('Mot de passe mis à jour','✅');draw()}};
  draw();return win('Paramètres','⚙️',body,{w:540,h:460});
 }
 
@@ -402,14 +598,15 @@ function openAbout(){
 }
 
 /* ---------- Terminal ---------- */
-const CMDS='help ls ll cd pwd cat echo mkdir touch rm cp mv tree clear date whoami hostname uname neofetch uptime history ps top cowsay fortune grep wc head tail sort apt sudo su man open nano vim edit df free id ping reboot shutdown exit useradd userdel passwd usermod users who groups last journalctl systemctl kill killall wall backup lock logout'.split(' ');
-function openTerminal(){
+const CMDS='help ls ll cd pwd cat echo mkdir touch rm cp mv tree clear date whoami hostname uname neofetch uptime history ps top cowsay fortune grep wc head tail sort apt sudo su man open nano vim edit df free id ping reboot shutdown exit useradd userdel passwd users who groups last journalctl systemctl kill killall wall backup lock logout diffuse'.split(' ');
+const ADMINCMDS=new Set('apt reboot shutdown poweroff useradd adduser userdel deluser users last journalctl systemctl kill killall wall backup diffuse'.split(' '));
+function openTerminal(opts={}){
  let eu=cur,cwd=[...homeP(cur)],stack=[],hist=[],hi=0,sudoUntil=0,passRes=null,busy=false;
  const term=document.createElement('div');term.className='term';
  const out=document.createElement('div');term.appendChild(out);
  const pl=document.createElement('div');pl.className='pl';const pr=document.createElement('span'),inp=document.createElement('input');
  inp.spellcheck=false;inp.autocomplete='off';pl.append(pr,inp);term.appendChild(pl);
- const W=win(`${cur}@weblinux`,'🖥️',term,{w:720,h:450});
+ const W=win(`${cur}@weblinux`,'🖥️',term,{w:opts.w||720,h:opts.h||450,x:opts.x,y:opts.y});
  const hp=()=>homeP(eu),nm=p=>norm(p,cwd,hp()),ok=(p,w)=>canDo(eu,p,w);
  const short=parts=>{const s=pstr(parts),h=pstr(hp());return s===h?'~':s.startsWith(h+'/')?'~'+s.slice(h.length):s};
  const promptHTML=()=>`<span class="g">${esc(eu)}@weblinux</span>:<span class="b">${esc(short(cwd))}</span>${eu==='root'?'#':'$'} `;
@@ -421,7 +618,7 @@ function openTerminal(){
  const err=m=>`<span class="r">${esc(m)}</span>`;
  const lines=t=>t.replace(/\n$/,'').split('\n');
  const readPass=lab=>new Promise(res=>{print(esc(lab));inp.type='password';pr.innerHTML='';passRes=v=>{inp.type='text';setPrompt();res(v)};inp.focus()});
- const need=(x,c)=>{if(eu==='root')return true;x.o(err(`${c} : Permission non accordée (essaie avec sudo)`));return false};
+ const need=(x,c)=>{if(isAdmin(eu))return true;x.o(err(`${c} : réservé au compte admin`));return false};
  const readF=(f,c)=>{const p=nm(f),n=get(p);if(!n)return{e:`${c} : ${f} : Aucun fichier ou dossier de ce type`};if(n.t==='d')return{e:`${c} : ${f} : est un dossier`};if(!ok(p,false))return{e:`${c} : ${f} : Permission non accordée`};return{s:n.s}};
  const authLines=()=>((fs.c.var.c.log.c['auth.log']||F()).s).split('\n').filter(Boolean);
 
@@ -429,21 +626,17 @@ function openTerminal(){
   help(a,x){x.o(`<span class="y">Commandes disponibles :</span>\n`+
    ` <span class="c">ls cd pwd cat echo mkdir touch rm cp mv tree</span>   fichiers et dossiers\n`+
    ` <span class="c">grep wc head tail sort</span>                        filtres (avec | )\n`+
-   ` <span class="c">neofetch uname date uptime whoami hostname id df free ps top</span>  système\n`+
-   ` <span class="c">nano vim edit open</span>  éditeur  ·  <span class="c">cowsay fortune history clear apt ping man</span>\n\n`+
-   `<span class="y">Comptes et administration :</span>\n`+
-   ` <span class="c">sudo CMD</span> / <span class="c">sudo -i</span>   exécuter en root (administrateurs, mot de passe demandé)\n`+
-   ` <span class="c">su [user]</span>             changer d'utilisateur  ·  <span class="c">exit</span> pour revenir\n`+
-   ` <span class="c">useradd [-a] nom</span>      créer un compte (-a = administrateur)\n`+
-   ` <span class="c">userdel [-r] nom</span>      supprimer un compte (-r = avec son dossier)\n`+
-   ` <span class="c">passwd [nom]</span>          changer un mot de passe\n`+
-   ` <span class="c">usermod -a|-u nom</span>     promouvoir / rétrograder\n`+
-   ` <span class="c">users who groups last</span> comptes et connexions\n`+
-   ` <span class="c">journalctl [-n N]</span>     journal d'authentification (root)\n`+
-   ` <span class="c">systemctl status|start|stop|restart SERVICE</span>\n`+
-   ` <span class="c">kill PID</span> / <span class="c">killall NOM</span>  ·  <span class="c">wall MSG</span> (annonce)  ·  <span class="c">backup</span> (root)\n`+
-   ` <span class="c">lock logout reboot shutdown exit</span>\n\n`+
-   `Astuces : Tab = autocomplétion, ↑/↓ = historique, <b>></b> <b>>></b> = redirection, <b>|</b> = pipe.`)},
+   ` <span class="c">neofetch uname date uptime whoami hostname id df free ps top ping</span>  système\n`+
+   ` <span class="c">nano vim edit open</span>  éditeur  ·  <span class="c">cowsay fortune history clear man</span>\n`+
+   ` <span class="c">passwd</span> (ton mot de passe)  ·  <span class="c">su USER</span>  ·  <span class="c">who groups lock logout exit</span>\n`+
+   (isAdmin(eu)?`\n<span class="y">Commandes réservées au compte admin :</span>\n`+
+   ` <span class="c">sudo CMD</span> / <span class="c">sudo -i</span>   accès root (fichiers /root, journal)\n`+
+   ` <span class="c">useradd nom</span>  <span class="c">userdel [-r] nom</span>  <span class="c">passwd nom</span>  <span class="c">users</span>  <span class="c">last</span>\n`+
+   ` <span class="c">journalctl [-n N]</span>  <span class="c">systemctl status|start|stop|restart SVC</span>\n`+
+   ` <span class="c">kill PID</span>  <span class="c">killall NOM</span>  <span class="c">wall MSG</span>  <span class="c">backup</span>  <span class="c">apt</span>  <span class="c">reboot</span>  <span class="c">shutdown</span>\n`+
+   ` <span class="c">diffuse</span> emoji "🎉🔥" [n] | msg "texte" | virus alert|skull|panic | terminals [n] ["texte"] | matrix | flip | clear\n`+
+   `            (ajoute <b>--local</b> pour tester sur ton écran seulement)\n`:'')+
+   `\nAstuces : Tab = autocomplétion, ↑/↓ = historique, <b>></b> <b>>></b> = redirection, <b>|</b> = pipe.`)},
   ls(a,x){const fl=a.filter(s=>s[0]==='-').join(''),args=a.filter(s=>s[0]!=='-'),all=fl.includes('a'),long=fl.includes('l');
    const list=(p,label)=>{const n=get(p);if(!n)return x.o(err(`ls : impossible d'accéder à '${label}' : Aucun fichier ou dossier de ce type`));
     if(!ok(p,false))return x.o(err(`ls : impossible d'ouvrir le dossier '${label}' : Permission non accordée`));
@@ -528,25 +721,33 @@ function openTerminal(){
     const pw=await readPass(t==='root'?`Mot de passe (${eu}) : `:'Mot de passe : ');
     if(!(await checkPw(t==='root'?eu:t,pw))){logEvent('su',`échec ${eu} -> ${t}`);return x.o(err(`su : Échec d'authentification`))}}
    logEvent('su',`${eu} -> ${t}`);stack.push({eu,cwd:[...cwd]});eu=t;cwd=[...homeP(t)]},
-  async useradd(a,x){if(!need(x,'useradd'))return;const adm=a.includes('-a'),n=a.filter(s=>s[0]!=='-')[0];
-   if(!n)return x.o('usage : useradd [-a] NOM');if(!/^[a-z][a-z0-9_-]{1,15}$/.test(n))return x.o(err('useradd : nom invalide (a-z, 0-9, _ -, 2 à 16 caractères)'));
+  async useradd(a,x){if(!need(x,'useradd'))return;const n=a.filter(s=>s[0]!=='-')[0];
+   if(!n)return x.o('usage : useradd NOM');if(!/^[a-z][a-z0-9_-]{1,15}$/.test(n))return x.o(err('useradd : nom invalide (a-z, 0-9, _ -, 2 à 16 caractères)'));
    if(users[n]||n==='root')return x.o(err(`useradd : l'utilisateur '${n}' existe déjà`));
    const p1=await readPass('Mot de passe du nouvel utilisateur : ');if(p1.length<4)return x.o(err('useradd : mot de passe trop court (4 minimum)'));
-   await mkUser(n,p1,adm?'admin':'user');logEvent('useradd',`${cur} a créé ${n} (${adm?'admin':'user'})`);x.o(`utilisateur '${esc(n)}' créé${adm?' (administrateur)':''}`)},
+   await mkUser(n,p1,'user');logEvent('useradd',`${cur} a créé ${n}`);x.o(`utilisateur '${esc(n)}' créé`)},
   userdel(a,x){if(!need(x,'userdel'))return;const rm=a.includes('-r'),n=a.filter(s=>s[0]!=='-')[0];
-   if(!users[n])return x.o(err(`userdel : l'utilisateur '${n||''}' n'existe pas`));if(n===cur)return x.o(err('userdel : impossible de supprimer la session ouverte'));
+   if(!users[n])return x.o(err(`userdel : l'utilisateur '${n||''}' n'existe pas`));if(n==='admin')return x.o(err('userdel : le compte admin est protégé'));if(n===cur)return x.o(err('userdel : impossible de supprimer la session ouverte'));
    if(users[n].role==='admin'&&Object.values(users).filter(u=>u.role==='admin').length<2)return x.o(err('userdel : dernier administrateur'));
    delete users[n];if(rm)delete fs.c.home.c[n];saveUsers();logEvent('userdel',`${cur} a supprimé ${n}${rm?' (avec son dossier)':''}`);x.o(`utilisateur '${esc(n)}' supprimé`)},
-  async passwd(a,x){const t=a[0]||(eu==='root'?cur:eu);if(!users[t])return x.o(err(`passwd : utilisateur '${t}' inconnu`));
+  async passwd(a,x){const t=a[0]||(eu==='root'?cur:eu);if(!users[t])return x.o(err(`passwd : utilisateur '${t}' inconnu`));if(t==='admin')return x.o(err('passwd : le mot de passe admin est défini dans le fichier'));
    if(t!==eu&&eu!=='root')return x.o(err('passwd : Permission non accordée'));
    if(eu!=='root'){const o=await readPass('Mot de passe actuel : ');if(!(await checkPw(t,o)))return x.o(err('passwd : Mot de passe incorrect'))}
    const p1=await readPass('Nouveau mot de passe : ');if(p1.length<4)return x.o(err('passwd : 4 caractères minimum'));
    const p2=await readPass('Confirmer : ');if(p1!==p2)return x.o(err('passwd : Les mots de passe ne correspondent pas'));
    await setPw(t,p1);logEvent('passwd',`mot de passe de ${t} modifié par ${eu}`);x.o('passwd : mot de passe mis à jour')},
-  usermod(a,x){if(!need(x,'usermod'))return;const n=a.filter(s=>s[0]!=='-')[0],up=a.includes('-a'),down=a.includes('-u');
-   if(!users[n]||(!up&&!down))return x.o('usage : usermod -a|-u NOM  (-a = administrateur, -u = utilisateur)');
-   if(down&&users[n].role==='admin'&&Object.values(users).filter(u=>u.role==='admin').length<2)return x.o(err('usermod : dernier administrateur'));
-   users[n].role=up?'admin':'user';saveUsers();logEvent('usermod',`${cur} a mis ${n} en ${users[n].role}`);x.o(`${esc(n)} est maintenant ${up?'administrateur':'utilisateur'}`)},
+  async diffuse(a,x){const k=a[0];
+   if(!k)return x.o('usage : diffuse emoji "🎉🔥" [n] | msg "texte" | virus alert|skull|panic | terminals [n] ["texte"] | matrix | flip | clear   (--local = aperçu ici)');
+   const loc=a.includes('--local');a=a.filter(s=>s!=='--local');let d={};
+   if(k==='emoji')d={e:a[1]||'🎉🔥',n:+a[2]||70};
+   else if(k==='msg'){d={m:a.slice(1).join(' ')};if(!d.m)return x.o(err('diffuse msg : texte manquant'))}
+   else if(k==='virus'){if(!['alert','skull','panic'].includes(a[1]))return x.o(err('diffuse virus : alert | skull | panic'));d={k:a[1]}}
+   else if(k==='terminals')d={n:+a[1]||8,m:a.slice(2).join(' ')};
+   else if(!['matrix','flip','clear'].includes(k))return x.o(err(`diffuse : effet '${k}' inconnu`));
+   const t=k==='terminals'?'terms':k;
+   if(loc){runFx(t,d);return x.o('aperçu local lancé')}
+   const r=await sendFx(t,d,'*');
+   x.o(r===true?'📡 envoyé à tous les connectés':r==='nokey'?err('clé absente : reconnecte-toi'):'⚠️ relais injoignable : envoyé seulement aux onglets de cet appareil')},
   users(a,x){x.o(Object.keys(users).map(n=>`${esc(n)}${isAdmin(n)?' <span class="y">(admin)</span>':''}${n===cur?' <span class="g">● connecté</span>':''}`).join('\n'))},
   who(a,x){x.o(`${esc(cur)}   pts/0   ${new Date().toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'})}`)},
   last(a,x){const l=authLines().filter(s=>/login: session ouverte/.test(s)).slice(-10).reverse();x.o(l.length?l.map(s=>{const m=s.match(/^(\S+ \S+) .*pour (\S+)/);return m?`${esc(m[2]).padEnd(12)}pts/0   ${m[1]}`:''}).join('\n'):'(aucune connexion enregistrée)')},
@@ -570,7 +771,7 @@ function openTerminal(){
   exit(a,x){if(stack.length){const s=stack.pop();eu=s.eu;cwd=s.cwd;sudoUntil=0}else W.close()}
  };
  C.vim=C.edit=C.nano;C.poweroff=C.shutdown;C.adduser=C.useradd;C.deluser=C.userdel;C.logout=C.logout;
- async function dispatch(name,a,x){if(name==='ll'){name='ls';a=['-l',...a]}const f=C[name];if(f&&name[0]!=='_')await f(a,x);else x.o(err(`bash : ${name} : commande introuvable (essaie 'help')`))}
+ async function dispatch(name,a,x){if(name==='ll'){name='ls';a=['-l',...a]}if(ADMINCMDS.has(name)&&!isAdmin(eu)){logEvent('bash',`${eu} : ${name} refusé`);return x.o(err(`bash : ${name} : commande réservée au compte admin`))}const f=C[name];if(f&&name[0]!=='_')await f(a,x);else x.o(err(`bash : ${name} : commande introuvable (essaie 'help')`))}
  async function exec(seg,input,last){
   const buf=[];let red=null;seg=seg.trim();
   const m=seg.match(/^(.*?)\s*(>>|>)\s*(\S+)\s*$/);if(m&&last){seg=m[1];red={app:m[2]==='>>',f:m[3]}}
@@ -589,7 +790,7 @@ function openTerminal(){
  }
  function complete(){
   const v=inp.value,parts=v.split(' '),w=parts[parts.length-1];let cands=[];
-  if(parts.length===1)cands=CMDS.filter(c=>c.startsWith(w));
+  if(parts.length===1)cands=CMDS.filter(c=>c.startsWith(w)&&(!ADMINCMDS.has(c)||isAdmin(eu)));
   else{const i=w.lastIndexOf('/'),dir=i>=0?w.slice(0,i+1):'',base=w.slice(i+1),p=nm(dir||'.'),n=get(p);
    if(n&&n.t==='d'&&ok(p,false))cands=Object.keys(n.c).filter(k=>k.startsWith(base)).map(k=>dir+k+(n.c[k].t==='d'?'/':''))}
   if(cands.length===1){parts[parts.length-1]=cands[0];inp.value=parts.join(' ')+(cands[0].endsWith('/')?'':' ')}
@@ -607,8 +808,10 @@ function openTerminal(){
  term.onclick=()=>{if(!getSelection().toString())inp.focus()};
  W.el.addEventListener('pointerdown',()=>setTimeout(()=>{if(!getSelection().toString())inp.focus()},0));
  setPrompt();
- print(`<span class="y">Bienvenue sur WebLinux 2.0</span>, <b>${esc(cur)}</b> (${isAdmin(cur)?'administrateur : utilise <span class="c">sudo</span> pour les commandes admin':'utilisateur'}).\nTape <span class="c">help</span> pour voir les commandes.\n`);
- setTimeout(()=>inp.focus(),50);return W;
+ if(!opts.lines)print(`<span class="y">Bienvenue sur WebLinux 2.0</span>, <b>${esc(cur)}</b> (${isAdmin(cur)?'administrateur : tape <span class="c">help</span> pour tes commandes admin':'utilisateur'}).\nTape <span class="c">help</span> pour voir les commandes.\n`);
+ if(opts.flood)W.flood=true;
+ if(opts.lines)opts.lines.forEach((l,i)=>setTimeout(()=>{if(term.isConnected)print(l)},250+i*350));
+ if(!opts.quiet)setTimeout(()=>inp.focus(),50);return W;
 }
 
 /* ---------- Bureau, menu contextuel, horloge ---------- */
@@ -623,7 +826,7 @@ document.addEventListener('contextmenu',e=>{if(!cur||e.target.closest('.win')||e
  ctx.style.left=Math.min(e.clientX,innerWidth-230)+'px';ctx.style.top=Math.min(e.clientY,innerHeight-170)+'px';ctx.style.display='block'});
 ctx.onclick=e=>{const a=e.target.dataset.a;if(a==='t')openTerminal();if(a==='f')openFiles();if(a==='s')openSettings();if(a==='l')lockScreen()};
 document.addEventListener('click',e=>{ctx.style.display='none';if(!e.target.closest('#qs'))qs.style.display='none'});
-document.addEventListener('keydown',e=>{if(cur&&e.ctrlKey&&e.altKey&&e.key.toLowerCase()==='t'){e.preventDefault();openTerminal()}if(e.key==='Escape'){LA.style.display='none';qs.style.display='none'}});
+document.addEventListener('keydown',e=>{if(cur&&e.ctrlKey&&e.altKey&&e.key.toLowerCase()==='t'){e.preventDefault();openTerminal()}if(e.key==='Escape'){LA.style.display='none';qs.style.display='none';clearFx()}});
 const loginClock=()=>`<div class="lt">${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div><div class="ld">${new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</div>`;
 const clock=()=>{$('#clock').textContent=new Date().toLocaleString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});const lc=$('.lclock');if(lc)lc.innerHTML=loginClock()};
 clock();setInterval(clock,10000);
@@ -633,13 +836,12 @@ if(navigator.getBattery)navigator.getBattery().then(b=>{const u=()=>$('#bat').te
 let lockedUntil=0,fails=0;
 function finishLogin(name,o){
  if(cur&&cur!==name)wins.slice().forEach(w=>w.close());
- cur=name;ssSet('wl2sess',name);lsSet('wl2last',name);users[name].last=Date.now();saveUsers();
+ cur=name;ssSet('wl2sess',name==='admin'?null:name);lsSet('wl2last',name);users[name].last=Date.now();saveUsers();
  logEvent('login',`session ouverte pour ${name}`);loadS(name);ensureHome(name);
  const L=$('#login');L.classList.add('fade');setTimeout(()=>{L.style.display='none';L.innerHTML=''},350);
  document.body.classList.remove('out');renderIcons();renderDock();
  if(!wins.length)openTerminal();
- toast(`Bienvenue, ${name} !`,'👋');
- if(users[name].def)setTimeout(()=>toast(`Pense à changer le mot de passe par défaut : tape « passwd »`,'⚠️'),1400);
+ toast(`Bienvenue, ${name} !`,'👋');startRelay();
 }
 function showLogin(o={}){
  const L=$('#login');L.style.display='flex';L.classList.remove('fade');document.body.classList.add('out');
@@ -647,10 +849,10 @@ function showLogin(o={}){
  function draw(){
   const names=o.lock?[cur]:Object.keys(users);let h=`<div class="lclock">${loginClock()}</div><div class="lbox">`;
   if(mode==='reg')h+=`<h2>Créer un compte</h2><input id="rn" placeholder="Nom d'utilisateur" maxlength="16" autocomplete="off"><input id="rp" type="password" placeholder="Mot de passe (4 min.)"><input id="rp2" type="password" placeholder="Confirmer"><div class="lerr"></div><div class="lrow"><button id="rb">Retour</button><button class="pri" id="rok">Créer</button></div>`;
-  else if(!sel)h+=`<h2>Qui es-tu ?</h2><div class="lusers">${names.map(n=>`<div class="lu" data-n="${esc(n)}"><div class="av big">${esc(n[0].toUpperCase())}</div>${esc(n)}<small>${users[n].role==='admin'?'administrateur':'utilisateur'}</small></div>`).join('')}</div><a class="llink" id="rg">＋ Créer un compte</a>`;
+  else if(!sel)h+=`<h2>Qui es-tu ?</h2><div class="lusers">${names.map(n=>`<div class="lu" data-n="${esc(n)}"><div class="av big">${esc(n[0].toUpperCase())}</div>${esc(n)}<small>${users[n].role==='admin'?'administrateur':'utilisateur'}</small></div>`).join('')}</div><button class="pri" id="rg">＋ Créer un compte</button>`;
   else h+=`<div class="av big">${esc(sel[0].toUpperCase())}</div><h2>${esc(sel)}</h2><input id="lp" type="password" placeholder="Mot de passe" autocomplete="current-password"><div class="lerr"></div><div class="lrow"><button id="lb">${o.lock?'Changer d\'utilisateur':'Retour'}</button><button class="pri" id="lok">Se connecter</button></div>`;
   h+='</div>';
-  if(!sel&&mode!=='reg'&&users.admin&&users.admin.def)h+=`<div class="lhint">💡 Compte administrateur par défaut : <b>admin</b> / <b>admin</b></div>`;
+  if(!sel&&mode!=='reg')h+=`<div class="lhint">✨ Pas de compte ? Crée-en un gratuitement : aucune autorisation nécessaire.</div>`;
   h+=`<div class="lpow"><button id="lsd" title="Éteindre">⏻</button></div>`;
   L.innerHTML=h;
   $$('.lu',L).forEach(e=>e.onclick=()=>{sel=e.dataset.n;draw()});
@@ -668,20 +870,20 @@ function showLogin(o={}){
    const reg=async()=>{const n=$('#rn',L).value.trim().toLowerCase(),p=$('#rp',L).value,p2=$('#rp2',L).value,er=$('.lerr',L);
     if(!/^[a-z][a-z0-9_-]{1,15}$/.test(n))return er.textContent='Nom invalide (minuscules, chiffres, _ -, 2 à 16).';
     if(users[n]||n==='root')return er.textContent='Ce nom est déjà pris.';if(p.length<4)return er.textContent='Mot de passe : 4 caractères minimum.';if(p!==p2)return er.textContent='Les mots de passe ne correspondent pas.';
-    await mkUser(n,p,'user');logEvent('useradd',`compte ${n} créé depuis l'écran de connexion`);toast('Compte créé, connecte-toi !','✅');mode='pick';sel=n;draw()};
+    await mkUser(n,p,'user');logEvent('useradd',`compte ${n} créé depuis l'écran de connexion`);finishLogin(n,o)};
    rok.onclick=reg;$('#rp2',L).onkeydown=e=>{if(e.key==='Enter')reg()};$('#rn',L).focus()}
  }
  draw();
 }
 function lockScreen(){if(!cur)return;logEvent('login',`écran verrouillé pour ${cur}`);qs.style.display='none';showLogin({lock:true})}
-function logout(){if(cur)logEvent('login',`session fermée pour ${cur}`);wins.slice().forEach(w=>w.close());ssSet('wl2sess',null);cur=null;qs.style.display='none';LA.style.display='none';loadS(lsGet('wl2last')||'');showLogin()}
-function poweroff(){if(cur)logEvent('system',`extinction (${cur})`);wins.slice().forEach(w=>w.close());ssSet('wl2sess',null);cur=null;qs.style.display='none';$('#login').style.display='none';$('#off').style.display='grid'}
+function logout(){if(cur)logEvent('login',`session fermée pour ${cur}`);wins.slice().forEach(w=>w.close());ssSet('wl2sess',null);cur=null;stopRelay();adminKey=null;clearFx();qs.style.display='none';LA.style.display='none';loadS(lsGet('wl2last')||'');showLogin()}
+function poweroff(){if(cur)logEvent('system',`extinction (${cur})`);wins.slice().forEach(w=>w.close());ssSet('wl2sess',null);cur=null;stopRelay();adminKey=null;clearFx();qs.style.display='none';$('#login').style.display='none';$('#off').style.display='grid'}
 $('#off').onclick=()=>{$('#off').style.display='none';boot(true)};
 
 /* ---------- Démarrage ---------- */
-const ready=(async()=>{if(!Object.keys(users).length){await mkUser('admin','admin','admin');users.admin.def=true;saveUsers()}else syncSys()})();
+const ready=(async()=>{ensureAdmin();syncSys()})();
 function boot(fresh){
- wins.slice().forEach(w=>w.close());bootTime=Date.now();if(fresh){ssSet('wl2sess',null);cur=null}
+ wins.slice().forEach(w=>w.close());bootTime=Date.now();if(fresh){ssSet('wl2sess',null);cur=null;stopRelay();adminKey=null}clearFx();
  document.body.classList.add('out');$('#login').style.display='none';qs.style.display='none';LA.style.display='none';
  const b=$('#boot');b.style.display='block';b.style.opacity=1;b.style.transition='';b.innerHTML='';
  const ok='[  <span style="color:#8ae234">OK</span>  ] ';
@@ -689,7 +891,7 @@ function boot(fresh){
  let i=0,done=false;
  const fin=async()=>{if(done)return;done=true;await ready;b.style.transition='opacity .5s';b.style.opacity=0;
   setTimeout(()=>{b.style.display='none';const s=ssGet('wl2sess');
-   if(s&&users[s]){cur=s;loadS(s);document.body.classList.remove('out');renderIcons();renderDock();openTerminal()}
+   if(s&&users[s]&&s!=='admin'){cur=s;loadS(s);startRelay();document.body.classList.remove('out');renderIcons();renderDock();openTerminal()}
    else{loadS(lsGet('wl2last')||'');showLogin()}},500)};
  const step=()=>{if(done)return;if(i<L.length){b.innerHTML+=L[i++]+'\n';setTimeout(step,150)}else setTimeout(fin,300)};
  b.onclick=fin;step();
